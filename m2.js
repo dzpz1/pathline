@@ -7,27 +7,28 @@
   /* =========================================================
      1 · What candidates will see
      ========================================================= */
-  const FIELDS = {
-    title: { label: 'Title', when: 'out' },
-    why: { label: 'Why now', when: 'out' },
-    success: { label: 'What success looks like', when: 'out' },
-    base: { label: 'Base range', when: 'out' },
-    hm: { label: 'Hiring manager', when: 'out' },
-    process: { label: 'Hiring process', when: 'out' },
-    commit: { label: 'Our commitment', when: 'out' },
-    team: { label: 'Team & scope', when: 'after' },
-    equity: { label: 'Equity', when: 'after' },
-    bonus: { label: 'Bonus', when: 'after' },
-    start: { label: 'Target start', when: 'after' },
-    company: { label: 'Company', when: 'after' }
-  };
+  const FIELDS = PL.FIELDS;
   const need = '<span class="need-t">Needed</span>';
+  const REMIND = {
+    why: 'Candidates who know why a role is open are more likely to reply.',
+    base: 'Candidates who see the base range in the first email are more likely to reply.',
+    process: 'Knowing the time it takes up front means fewer drop-outs later.',
+    commit: 'A response commitment is one of the strongest reasons to reply.',
+    team: 'Candidates who know who they’d work with are more likely to reply.',
+    equity: 'Candidates who know the equity range up front are more likely to reply.',
+    bonus: 'Being clear about bonus avoids surprises at the offer.',
+    start: 'A start date helps candidates plan.',
+    company: 'Company facts are what make a cold email credible.'
+  };
+  const remindFor = k => REMIND[k] || 'The more you share up front, the better your hiring outcomes.';
+  const labelOf = k => FIELDS[k] ? FIELDS[k].label : (PL.custom(k) || {}).label || k;
   function fieldValue(k) {
     const s = S().see;
+    const c = PL.custom(k);
+    if (c) return c.value ? esc(c.value) : need;
     switch (k) {
       case 'title': return s.title ? esc(s.title) : need;
-      case 'why': return s.whyType && s.whyLine.trim() ? `${esc(s.whyType)} · ${esc(s.whyLine)}` : need;
-      case 'success': { const o = s.success.filter(x => x.trim()); const blank = o.some(x => /__/.test(x)); return o.length ? `${esc(o[0])}${o.length > 1 ? ` · +${o.length - 1} more` : ''}${blank ? ' · has a blank' : ''}` : '<span class="muted">None. Email 2 leaves the line out.</span>'; }
+      case 'why': return s.whyType ? `${esc(s.whyType)}${s.whyLine.trim() ? ` · ${esc(s.whyLine)}` : ''}` : need;
       case 'base': return `$${s.baseMin}–${s.baseMax}k`;
       case 'hm': return s.hm ? esc(s.hm) : need;
       case 'process': return `${s.stages.length} stages · about ${PL.totalHours()} hours`;
@@ -41,49 +42,52 @@
     return '';
   }
   PL.seeMissing = () => {
-    const s = S().see, m = [];
+    const s = S().see, m = [], shown = PL.shown;
     if (!s.title) m.push('title');
-    if (!s.whyType || !s.whyLine.trim()) m.push('why now');
-    if (!s.engineers) m.push('team size');
-    if (!s.equity) m.push('equity');
-    if (!s.bonus) m.push('bonus');
+    if (shown('why') && !s.whyType) m.push('why now');
+    if (shown('team') && !s.engineers) m.push('team size');
+    if (shown('equity') && !s.equity) m.push('equity');
+    if (shown('bonus') && !s.bonus) m.push('bonus');
     if (!s.hm) m.push('hiring manager');
+    (s.custom || []).forEach(c => { if (shown(c.id) && !c.value) m.push(c.label.toLowerCase()); });
     return m;
   };
-  const inOutreach = k => FIELDS[k].when === 'out' || S().see.promoted[k];
+  const allKeys = () => Object.keys(FIELDS).concat((S().see.custom || []).map(c => c.id));
   SCREENS.see = () => {
-    const keys = Object.keys(FIELDS), m = PL.seeMissing();
-    const rows = list => list.map(k => PL.row(FIELDS[k].label, fieldValue(k), 'openField', `data-k="${k}"`)).join('');
+    const keys = allKeys().filter(PL.shown), hidden = allKeys().filter(k => !PL.shown(k)), m = PL.seeMissing();
+    const rows = list => list.map(k => PL.row(esc(labelOf(k)), fieldValue(k), 'openField', `data-k="${k}"`)).join('');
+    const addRow = place => `<div class="frow add" data-a="openAddInfo" data-place="${place}"><span class="v">Add information</span></div>`;
     return {
-      title: 'What candidates will see', back: 'shortlist',
-      body: `<p class="lede">Filled in before any outreach, so candidates get the facts up front. Prefilled from your job description where possible.</p>
-        <div class="sec">Shown in outreach emails</div><div class="group">${rows(keys.filter(inOutreach))}</div>
-        <div class="sec">Shown after they reply</div><div class="group">${rows(keys.filter(k => !inOutreach(k)))}</div>
+      title: 'What candidates will see', back: 'shortlist', task: 'What candidates will see',
+      body: `<div class="intro">The more you share up front, the better your hiring outcomes: candidates reply more and drop out less.</div>
+        <div class="sec">Shown in outreach emails</div><div class="group">${rows(keys.filter(k => PL.placeOf(k) === 'out'))}${addRow('out')}</div>
+        <div class="sec">Shown after they reply</div><div class="group">${rows(keys.filter(k => PL.placeOf(k) === 'after'))}${addRow('after')}</div>
+        ${hidden.length ? `<div class="sec">Hidden from candidates</div><div class="group">${hidden.map(k => `<div class="li"><div class="b"><div class="t1">${esc(labelOf(k))}</div></div><button class="btn btn-xs btn-secondary" data-a="unhide" data-k="${k}">Show again</button></div>`).join('')}</div>` : ''}
         ${m.length ? `<button class="textlink" style="margin-top:16px" data-a="demoSee">Fill remaining with demo values</button>` : ''}`,
       footer: `<button class="btn btn-primary" data-a="go" data-r="sequence" ${m.length ? 'disabled' : ''}>${m.length ? `${m.length} needed: ${m.join(', ')}` : 'Continue to emails'}</button>`
     };
   };
-  A.openField = d => PL.openSheet('field', { key: d.k });
+  A.openField = d => { S().ui.confirmRemove = null; S().ui.movedLater = null; PL.openSheet('field', { key: d.k }); };
   const opts = PL.options;
   SHEETS.field = sh => {
-    const s = S().see, k = sh.key, f = FIELDS[k];
+    const s = S().see, k = sh.key, f = FIELDS[k], c = PL.custom(k), u = S().ui;
     let body = '';
-    switch (k) {
+    if (c) {
+      body = `<div class="lbl">Label</div><input class="inl" data-i="customField" data-id="${c.id}" data-f="label" value="${esc(c.label)}">
+        <div class="lbl">What candidates see</div><textarea class="inl" rows="${Math.max(1, Math.ceil(c.value.length / 38))}" data-i="customField" data-id="${c.id}" data-f="value" placeholder="Type the detail">${esc(c.value)}</textarea>`;
+    } else switch (k) {
       case 'title': body = `<select class="field" data-c="seeTitle">${opts(['PM, AI', 'Senior PM, AI'], s.title, 'Choose')}</select>`; break;
       case 'why': body = `<div class="chips">${['New role', 'Backfill', 'Team growing'].map(t => PL.chip(t, s.whyType === t, 'seeWhyType', `data-v="${t}"`)).join('')}</div>
-        <label class="field-label" style="margin-top:14px">In a line</label><textarea class="field" rows="3" data-i="seeWhyLine" placeholder="e.g. Our first dedicated AI PM. The founders have owned AI until now.">${esc(s.whyLine)}</textarea>`; break;
-      case 'success': body = `${!s.successEdited ? '<div class="row" style="margin-bottom:10px"><span class="tag-t">Suggested</span><span class="small muted">Drafted from your job description</span></div>' : ''}
-        ${s.success.map((o, i) => `<div class="outcome-edit"><span class="num">${i + 1}</span><textarea class="field" rows="2" data-i="seeSuccess" data-idx="${i}">${esc(o)}</textarea></div><button class="textlink danger" style="margin:0 0 12px 32px" data-a="successRemove" data-idx="${i}">Remove</button>`).join('')}
-        <button class="btn btn-sm btn-secondary" data-a="successAdd">Add outcome</button>
-        <p class="small muted" style="margin:12px 2px 0">Email 2 uses the first outcome. If it still has a blank (__) or is empty, the email leaves that line out.</p>`; break;
-      case 'base': body = `<div class="group"><div class="fld-row"><span class="k">Base range</span><div class="v" style="flex-wrap:nowrap"><select class="field inline" data-c="seeBaseMin">${opts(PL.baseOpts(100, s.baseMax - 5), s.baseMin)}</select><span class="muted">to</span><select class="field inline" data-c="seeBaseMax">${opts(PL.baseOpts(s.baseMin + 5, 350), s.baseMax)}</select></div></div></div><p class="small muted" style="margin:8px 2px 0">From your job description. Also set on Review & pool.</p>`; break;
+        <div class="lbl" style="margin-top:14px">In a line (optional)</div><textarea class="inl" rows="2" data-i="seeWhyLine" placeholder="${esc(s.whyType ? PL.WHY_DEFAULT[s.whyType] : 'e.g. Our first dedicated AI PM. The founders have owned AI until now.')}">${esc(s.whyLine)}</textarea>
+        <p class="small muted" style="margin:8px 2px 0">Picking a type is enough. Without a line, emails say: “${esc(s.whyType ? PL.WHY_DEFAULT[s.whyType] : PL.WHY_DEFAULT['New role'])}”</p>`; break;
+      case 'base': body = `<div class="group"><div class="fld-row"><span class="k">Base range</span><div class="v" style="flex-wrap:nowrap"><select class="field inline" data-c="seeBaseMin">${opts(PL.baseOpts(100, s.baseMax - 5), s.baseMin)}</select><span class="muted">to</span><select class="field inline" data-c="seeBaseMax">${opts(PL.baseOpts(s.baseMin + 5, 350), s.baseMax)}</select></div></div></div><p class="small muted" style="margin:8px 2px 0">From your job description. It can move to after they reply, but not be hidden: many states’ pay transparency laws expect a range.</p>`; break;
       case 'hm': body = `<select class="field" data-c="seeHm">${opts(D.HMS, s.hm, 'Select')}</select><p class="small muted" style="margin:8px 2px 0">Sends the outreach emails from their own mailbox.</p>`; break;
-      case 'process': body = `<p class="sort-hint">Hold and drag to reorder. Tap a stage to edit it.</p>
-        <div class="group"><div class="stage-list">${s.stages.map((st, i) => `<div class="stage-row" data-sort="stages" data-a="openStage" data-idx="${i}"><span class="idx">${i + 1}</span><span class="nm">${esc(st.name)}</span><span class="small muted">${st.h}h</span><span class="chev">${ic('chev', 'sm')}</span></div>`).join('')}</div></div>
+      case 'process': body = `<p class="sort-hint">Tap a name or time to change it. Use the arrows to re-order.</p>
+        <div class="group">${s.stages.map((st, i) => `<div class="stage-row">${PL.rankCol(i, s.stages.length, 'stageMove', `data-idx="${i}"`)}<input class="inl stage-nm" data-i="stageName" data-idx="${i}" value="${esc(st.name)}" aria-label="Stage name"><select class="inl-select" data-c="stageH" data-idx="${i}" aria-label="Hours">${opts([1, 2, 3, 4, 5, 6].map(h => ({ v: h, l: `${h}h` })), st.h)}</select>${s.stages.length > 1 ? `<button class="textlink danger" data-a="stageRemove" data-idx="${i}">Remove</button>` : ''}</div>`).join('')}</div>
         <div class="row" style="margin-top:12px"><button class="btn btn-sm btn-secondary" data-a="stageAdd">Add stage</button><span class="spacer"></span><span class="small muted">About ${PL.totalHours()} hours of their time</span></div>`; break;
       case 'commit': body = `<div style="font-size:14px;margin-bottom:10px">We reply within</div><div class="chips">${[24, 48, 72].map(h => PL.chip(`${h} hours`, s.commitment === h, 'seeCommit', `data-v="${h}"`)).join('')}</div><p class="small muted" style="margin:10px 2px 0">At every stage. Tracked, and shown on your record with candidates.</p>`; break;
       case 'team': body = `<div class="group">
-        <div class="fld-row"><span class="k">Reports to</span><div class="v"><input class="field" style="padding:8px 10px;font-size:14px" data-i="seeReportsTo" value="${esc(s.reportsTo)}" placeholder="e.g. Farah (CTO)"></div></div>
+        <div class="fld-row"><span class="k">Reports to</span><div class="v"><input class="inl" data-i="seeReportsTo" value="${esc(s.reportsTo)}" placeholder="e.g. Farah (CTO)"></div></div>
         <div class="fld-row"><span class="k">Engineers</span><div class="v"><select class="field inline" data-c="seeEngineers">${opts(Array.from({ length: 40 }, (_, i) => String(i + 1)), s.engineers, 'Choose')}</select></div></div>
         <div class="fld-row"><span class="k">Other PMs</span><div class="v"><select class="field inline" data-c="seeOtherPMs">${opts(['0', '1', '2', '3', '4', '5'], s.otherPMs, 'Choose')}</select></div></div>
         <div class="fld-row"><span class="k">Direct reports</span><div class="v"><select class="field inline" data-c="seeReports">${opts(['0', '1', '2', '3', '4', '5'], s.directReports)}</select></div></div></div>`; break;
@@ -94,15 +98,18 @@
       case 'start': body = `<select class="field" data-c="seeStart">${opts(['Nov 2026', 'Dec 2026', 'Jan 2027', 'Feb 2027'], s.start)}</select><p class="small muted" style="margin:8px 2px 0">Also set on Review & pool. It sizes the shortlist.</p>`; break;
       case 'company': body = `<div class="group">${D.FACTS.map(x => `<div class="li"><div class="b" style="font-size:13.5px">${esc(x)}</div></div>`).join('')}</div><p class="small muted" style="margin:8px 2px 0">This is the fact bank. Emails can only use facts from here.</p>`; break;
     }
-    if (f.when === 'after') body += `<label class="check" style="margin-top:16px"><input type="checkbox" data-c="promote" data-k="${k}" ${s.promoted[k] ? 'checked' : ''}>Show in outreach emails</label>`;
-    return { title: f.label, sub: inOutreach(k) ? 'Shown in outreach emails' : 'Shown after they reply', tall: k === 'success', body, foot: `<button class="btn btn-primary" data-a="closeSheet">Done</button>` };
+    const fixed = f && f.fixed, keep = f && f.keep, place = PL.placeOf(k);
+    const placeCtl = fixed ? `<p class="small muted" style="margin:16px 2px 0">Always in outreach emails: every email is from someone, about a role.</p>` :
+      `<div class="lbl" style="margin-top:18px">Show</div><div class="chips">${PL.chip('In outreach emails', place === 'out', 'setPlace', `data-k="${k}" data-v="out"`)}${PL.chip('After they reply', place === 'after', 'setPlace', `data-k="${k}" data-v="after"`)}</div>
+       ${u.movedLater === k ? `<div class="flag" style="margin-top:10px"><div>${esc(remindFor(k))} Emails will leave it out; candidates see it after they reply.</div></div>` : ''}`;
+    const removeCtl = keep ? '' : (u.confirmRemove === k
+      ? `<div class="flag" style="margin-top:16px"><div>${esc(remindFor(k))} Remove anyway?<div class="row" style="margin-top:10px"><button class="btn btn-xs btn-secondary" data-a="keepField">Keep it</button><button class="btn btn-xs btn-primary" data-a="hideField" data-k="${k}">Remove</button></div></div></div>`
+      : `<button class="textlink danger" style="margin-top:18px" data-a="askRemove" data-k="${k}">Remove from what candidates see</button>`);
+    return { title: esc(labelOf(k)), sub: 'Changes save automatically', tall: k === 'process', body: body + placeCtl + removeCtl };
   };
   C.seeTitle = v => { S().see.title = v; };
   A.seeWhyType = d => { S().see.whyType = d.v; };
   I.seeWhyLine = v => { S().see.whyLine = v; };
-  I.seeSuccess = (v, d) => { S().see.success[Number(d.idx)] = v; S().see.successEdited = true; };
-  A.successRemove = d => { S().see.success.splice(Number(d.idx), 1); S().see.successEdited = true; };
-  A.successAdd = () => { S().see.success.push(''); S().see.successEdited = true; };
   C.seeHm = v => { S().see.hm = v; };
   A.seeCommit = d => { S().see.commitment = Number(d.v); };
   I.seeReportsTo = v => { S().see.reportsTo = v; };
@@ -112,24 +119,50 @@
   C.seeEquity = v => { S().see.equity = v; };
   C.seeVesting = v => { S().see.vesting = v; };
   C.seeBonus = v => { S().see.bonus = v; };
-  C.promote = (v, d) => { S().see.promoted[d.k] = v; };
-  PL.SORT.stages = (from, to) => PL.move(S().see.stages, from, to);
-  A.openStage = d => PL.openSheet('stage', { id: 's' + d.idx, idx: Number(d.idx) });
-  SHEETS.stage = sh => {
-    const s = S().see, st = s.stages[sh.idx];
-    if (!st) return { title: 'Stage', body: '' };
+  A.setPlace = d => {
+    const s = S().see, c = PL.custom(d.k);
+    const was = PL.placeOf(d.k);
+    if (c) c.place = d.v; else s.place[d.k] = d.v;
+    S().ui.movedLater = (was === 'out' && d.v === 'after') ? d.k : null;
+  };
+  A.askRemove = d => { S().ui.confirmRemove = d.k; };
+  A.keepField = () => { S().ui.confirmRemove = null; };
+  A.hideField = d => { S().see.hidden[d.k] = true; S().ui.confirmRemove = null; PL.S.sheet = null; PL.toast(`${esc(labelOf(d.k))} hidden from candidates`, 'unhide', d.k); };
+  A.unhide = d => { delete S().see.hidden[d.k]; };
+  PL.UNDO.unhide = k => { delete S().see.hidden[k]; };
+  I.customField = (v, d) => { const c = PL.custom(d.id); if (c) c[d.f] = v; };
+  A.openAddInfo = d => PL.openSheet('addInfo', { key: d.place });
+  SHEETS.addInfo = sh => {
+    const s = S(), have = (s.see.custom || []).map(c => c.label);
+    const visa = { yes: 'We sponsor visas', no: 'We don’t sponsor visas', case: 'Visa sponsorship case by case' }[s.reqs.visa] || '';
+    const sugg = D.INFO_SUGGESTIONS.map(x => Object.assign({}, x, { value: x.value === '__VISA__' ? visa : x.value })).filter(x => x.value && !have.includes(x.label));
     return {
-      title: `Stage ${sh.idx + 1}`, sub: 'Hiring process',
-      body: `<label class="field-label">Name</label><input class="field" data-i="stageName" data-idx="${sh.idx}" value="${esc(st.name)}">
-        <label class="field-label" style="margin-top:12px">Time it takes the candidate</label><select class="field" data-c="stageH" data-idx="${sh.idx}">${opts([1, 2, 3, 4, 5, 6].map(h => ({ v: h, l: `About ${h} hour${h > 1 ? 's' : ''}` })), st.h)}</select>
-        ${s.stages.length > 1 ? `<button class="textlink danger" style="margin-top:18px" data-a="stageRemove" data-idx="${sh.idx}">Remove stage</button>` : ''}`,
-      foot: `<button class="btn btn-primary" data-a="openField" data-k="process">Back to hiring process</button>`
+      title: 'Add information', sub: sh.key === 'out' ? 'Shown in outreach emails' : 'Shown after they reply',
+      body: `${sugg.length ? `<div class="sec" style="margin-top:0">Things we already know</div><div class="group">${sugg.map((x, i) => `<div class="li"><div class="b"><div class="t1">${esc(x.label)}</div><div class="t2">${esc(x.value)} · ${esc(x.src)}</div></div><button class="btn btn-xs btn-secondary" data-a="addInfo" data-i2="${i}" data-place="${sh.key}">Add</button></div>`).join('')}</div>` : ''}
+        <div class="sec">Your own</div>
+        <input class="field" id="info-label" placeholder="Label, e.g. Interview panel"><textarea class="field" id="info-value" rows="2" style="margin-top:8px" placeholder="What candidates see"></textarea>
+        <button class="btn btn-sm btn-secondary" style="margin-top:10px" data-a="addInfoOwn" data-place="${sh.key}">Add</button>`
     };
   };
+  A.addInfo = d => {
+    const s = S(), visa = { yes: 'We sponsor visas', no: 'We don’t sponsor visas', case: 'Visa sponsorship case by case' }[s.reqs.visa] || '';
+    const have = (s.see.custom || []).map(c => c.label);
+    const sugg = D.INFO_SUGGESTIONS.map(x => Object.assign({}, x, { value: x.value === '__VISA__' ? visa : x.value })).filter(x => x.value && !have.includes(x.label));
+    const x = sugg[Number(d.i2)]; if (!x) return;
+    s.see.custom.push({ id: 'f' + Date.now(), label: x.label, value: x.value, place: d.place });
+    PL.S.sheet = null; PL.toast(`Added ${esc(x.label)}`);
+  };
+  A.addInfoOwn = d => {
+    const l = document.getElementById('info-label'), v = document.getElementById('info-value');
+    if (!l || !l.value.trim()) { if (l) { l.classList.add('need'); l.focus(); } return; }
+    S().see.custom.push({ id: 'f' + Date.now(), label: l.value.trim(), value: v ? v.value.trim() : '', place: d.place });
+    PL.S.sheet = null; PL.toast(`Added ${esc(l.value.trim())}`);
+  };
+  A.stageMove = d => { const st = S().see.stages, i = Number(d.idx), j = i + Number(d.d); if (j < 0 || j >= st.length) return; PL.move(st, i, j); };
   I.stageName = (v, d) => { S().see.stages[Number(d.idx)].name = v; };
   C.stageH = (v, d) => { S().see.stages[Number(d.idx)].h = Number(v); };
-  A.stageRemove = d => { const st = S().see.stages; if (st.length > 1) st.splice(Number(d.idx), 1); PL.openSheet('field', { key: 'process' }); };
-  A.stageAdd = () => { const st = S().see.stages; st.push({ name: 'New stage', h: 1 }); PL.openSheet('stage', { id: 's' + (st.length - 1), idx: st.length - 1 }); };
+  A.stageRemove = d => { const st = S().see.stages; if (st.length > 1) st.splice(Number(d.idx), 1); };
+  A.stageAdd = () => { S().see.stages.push({ name: 'New stage', h: 1 }); setTimeout(() => { const els = document.querySelectorAll('.stage-nm'); const el = els[els.length - 1]; if (el) { el.focus(); el.select(); } }, 30); };
   A.demoSee = () => {
     const s = S().see;
     if (!s.title) s.title = 'Senior PM, AI';
@@ -141,7 +174,6 @@
     if (!s.equity) s.equity = '0.1–0.2%';
     if (!s.bonus) s.bonus = '10% target';
     if (!s.hm) s.hm = D.HMS[0];
-    if (/__/.test(s.success[0] || '')) { s.success[0] = s.success[0].replace('__', '50'); }
   };
   PL.FILL.see = () => A.demoSee();
 
@@ -155,20 +187,23 @@
   };
   PL.orderedPre = () => { const ap = PL.approved(); return ap.filter(c => c.warm).concat(ap.filter(c => !c.warm)); };
 
-  const BLANK_RE = /\[(why now|reports to|# engineers)\]/g;
+  const BLANK_RE = /\[(why now|team size)\]/g;
   function fill(text, ctx, counter) {
     let plain = '', html = '', last = 0, skip = false;
     const re = /\[\[(\w+)\]\]/g; let m;
+    const only = text.trim().replace(/^- /, '');
     while ((m = re.exec(text))) {
       const before = text.slice(last, m.index);
       html += esc(before); plain += before;
       const key = m[1], val = ctx[key];
       if (val) { html += `<span class="slot" title="${esc(PL.SLOT_SRC[key] || '')}">${esc(val)}</span>`; plain += val; }
-      else if (PL.OPTIONAL.includes(key)) skip = true;
-      else { const lbl = PL.BLANK_LABEL[key] || key; html += `<span class="blank" contenteditable="false" data-a="openBlank" data-f="${key}">[${esc(lbl)}]</span>`; plain += `[${lbl}]`; counter.n++; }
+      else if (val === null) { const lbl = PL.BLANK_LABEL[key] || key; html += `<span class="blank" contenteditable="false" data-a="openBlank" data-f="${key}">[${esc(lbl)}]</span>`; plain += `[${lbl}]`; counter.n++; }
+      else if (only === m[0]) skip = true;
       last = re.lastIndex;
     }
     html += esc(text.slice(last)); plain += text.slice(last);
+    html = html.replace(/\s{2,}/g, ' ').replace(/^\s+/, ''); plain = plain.replace(/\s{2,}/g, ' ').trim();
+    if (!plain) skip = true;
     return { html, plain, skip };
   }
   function editedHTML(t, counter) {
@@ -221,7 +256,8 @@
           ${r.html}
           ${q.oneTap ? `<div class="onetap"><span>Interested</span><span>Tell me more</span><span>Not now</span><span>I know someone</span></div>` : ''}
           <div class="revise">
-            <div class="row"><input class="field" id="rev-${i}" placeholder="Revise this email, e.g. cut the customer list" data-enter="reviseEmail" data-idx="${i}"><button class="btn btn-sm btn-primary" data-a="reviseEmail" data-idx="${i}">Revise</button></div>
+            <div class="row"><input class="field" id="rev-${i}" value="${esc(s.ui.voice['rev-' + i] || '')}" placeholder="Revise this email, e.g. cut the customer list" data-enter="reviseEmail" data-idx="${i}"><button class="btn btn-sm btn-primary" data-a="reviseEmail" data-idx="${i}">Revise</button></div>
+            ${PL.talkLink('rev-' + i)}
             <div class="chips">${PL.chip('Shorter', false, 'reviseEmail', `data-idx="${i}" data-v="shorter"`, 'sm')}${PL.chip('Warmer', false, 'reviseEmail', `data-idx="${i}" data-v="warmer"`, 'sm')}${PL.chip('Regenerate', false, 'reviseEmail', `data-idx="${i}" data-v="regen"`, 'sm')}</div>
             ${status}
           </div></div>`;
@@ -234,20 +270,23 @@
     }).join('');
     const versions = q.order.length > 1 ? `<div class="versions">${q.order.map(k => PL.chip(esc(q.versions[k].name), q.active === k, 'setVersion', `data-v="${k}"`, 'sm')).join('')}<span class="spacer"></span><button class="textlink" data-a="compareVersions">Compare</button></div>` : '';
     return {
-      title: 'Outreach sequence', back: 'see',
+      title: 'Outreach sequence', back: 'see', task: 'Email sequence',
       body: `<div class="card" style="padding:12px 14px"><div style="font-weight:600;font-size:14.5px">From Farah · to ${ap.length} pre-candidates</div><div class="small muted" style="margin-top:2px">5 emails. Stops when they reply. Emails 2–5 go in the same thread.</div>
           <label class="field-label" style="margin:12px 2px 6px">Preview as</label><select class="field" style="padding:9px 32px 9px 11px;font-size:14px" data-c="seqPreview">${PL.options(ap.map(c => ({ v: c.id, l: `${c.name} · ${c.title}` })), cand.id)}</select>
           <label class="check" style="margin-top:12px;font-size:13px"><input type="checkbox" data-c="oneTap" ${q.oneTap ? 'checked' : ''}>One-tap replies under the signature</label></div>
         <div class="sec">Emails ${q.revisingAll ? '<span class="working" style="margin-left:6px">Rewriting all 5…</span>' : ''}</div>
         ${versions}${cards}
         <div class="change-all"><div class="t">Change all emails</div>
-          <div class="row"><input class="field" id="rev-all" placeholder="e.g. focus on growth, or less salesy" data-enter="reviseAll"><button class="btn btn-sm btn-primary" data-a="reviseAll">Apply</button></div>
+          <div class="row"><input class="field" id="rev-all" value="${esc(s.ui.voice['rev-all'] || '')}" placeholder="e.g. focus on growth, or less salesy" data-enter="reviseAll"><button class="btn btn-sm btn-primary" data-a="reviseAll">Apply</button></div>
+          ${PL.talkLink('rev-all')}
           <div class="chips" style="margin-top:8px">${PL.chip('Growth', false, 'reviseAll', 'data-v="growth"', 'sm')}${PL.chip('Shorter', false, 'reviseAll', 'data-v="shorter"', 'sm')}${PL.chip('Warmer', false, 'reviseAll', 'data-v="warmer"', 'sm')}</div>
           <p class="small muted" style="margin:8px 2px 0">Tone changes apply directly. A new angle shows you a plan first.</p></div>
         <p class="small muted" style="margin:14px 2px 0">Every fact comes from your company fact bank: your job description, your settings and the sample emails you shared.</p>`,
       footer: `<button class="btn btn-primary" data-a="approveSeq" ${totalBlanks ? 'disabled' : ''}>${totalBlanks ? `${totalBlanks} blank${totalBlanks > 1 ? 's' : ''} to fill before approving` : 'Approve sequence'}</button>`
     };
   };
+  PL.VOICE['rev-n'] = 'Make this one shorter';
+  PL.VOICE['rev-all'] = 'Focus on growth';
   A.toggleEmail = d => { const u = S().ui, i = Number(d.idx); u.openEmail = u.openEmail === i ? -1 : i; };
   C.seqPreview = v => { S().seq.preview = v; };
   C.oneTap = v => { S().seq.oneTap = v; };
@@ -265,6 +304,7 @@
     const input = document.getElementById('rev-' + i);
     const prompt = d.v || (input ? input.value.trim() : '');
     if (!prompt) { if (input) input.focus(); return; }
+    delete S().ui.voice['rev-' + i];
     if (v.kind !== 'base') { PL.toast('In this prototype, per-email revisions work on v1 Balanced'); return; }
     S().seq.revising = i;
     setTimeout(() => {
@@ -302,8 +342,7 @@
     return {
       title: `Compare email ${i + 1}`, tall: true,
       body: `${sh.mode === 'ver' ? `<div class="chips" style="margin-bottom:12px">${[0, 1, 2, 3, 4].map(k => PL.chip(`Email ${k + 1}`, k === i, 'cmpIdx', `data-idx="${k}"`, 'sm')).join('')}</div>` : ''}
-        <div class="cmp"><h5>${esc(la)}</h5>${a}</div><div class="cmp after" style="margin-top:10px"><h5>${esc(lb)}</h5>${b}</div>`,
-      foot: `<button class="btn btn-primary" data-a="closeSheet">Done</button>`
+        <div class="cmp"><h5>${esc(la)}</h5>${a}</div><div class="cmp after" style="margin-top:10px"><h5>${esc(lb)}</h5>${b}</div>`
     };
   };
 
@@ -311,6 +350,7 @@
     const input = document.getElementById('rev-all');
     const prompt = d.v || (input ? input.value.trim() : '');
     if (!prompt) { if (input) input.focus(); return; }
+    delete S().ui.voice['rev-all'];
     if (/grow/i.test(prompt)) { S().ui.planEdit = false; PL.openSheet('plan'); return; }
     const variant = /short|brief|concise|cut/i.test(prompt) ? 'shorter' : /warm|friend|personal|human|less salesy|kind/i.test(prompt) ? 'warmer' : null;
     if (!variant) { PL.toast('In this prototype, try Growth, Shorter, Warmer or “less salesy”'); return; }
@@ -333,7 +373,7 @@
       body: s.ui.planEdit
         ? `<textarea class="field" id="plan-edit" rows="9">${esc(lines.join('\n'))}</textarea><p class="small muted" style="margin:6px 2px">One line per email.</p>`
         : `<div class="group">${lines.map((l, i) => `<div class="plan-line"><b>${i + 1}</b><span>${esc(l)}</span></div>`).join('')}</div>
-          <p class="small muted" style="margin:12px 2px 0">What success looks like, why now, comp and process carry over from v1.</p>`,
+          <p class="small muted" style="margin:12px 2px 0">Why now, comp and process carry over from What candidates will see.</p>`,
       foot: s.ui.planEdit
         ? `<button class="btn btn-primary" data-a="planSave">Save plan</button>`
         : `<div class="row"><button class="btn btn-secondary" data-a="planEditToggle">Edit plan</button><button class="btn btn-primary" data-a="openFacts">Write it</button></div>`
@@ -372,56 +412,37 @@
   /* =========================================================
      3 · Start outreach
      ========================================================= */
-  /* Sam's independent review is fixed once, the first time it's needed, so resolving one never surfaces another. */
-  PL.disagreements = () => {
-    const o = S().out;
-    if (!o.disList) {
-      const ap = PL.approved();
-      o.disList = [];
-      if (ap[1]) o.disList.push({ id: ap[1].id, why: 'Technical depth: prototypes only' });
-      if (ap[4]) o.disList.push({ id: ap[4].id, why: 'Relocation seems unlikely' });
-    }
-    return o.disList.filter(x => !o.disResolved[x.id]);
-  };
-  A.approveSeq = () => PL.openSheet('startOut');
+  A.approveSeq = () => { S().ui.activeDraft = String(S().out.active); PL.openSheet('startOut'); };
   function projCard(active, remaining) {
     const p = PL.projection(active, remaining), cls = p.status === 'On track' ? 'acc' : p.status === 'Tight' ? 'warn' : 'danger';
-    return `<div class="card" style="margin-top:12px"><div class="row"><span style="font-size:14px">At ${active}: all ${remaining} contacted by <b>${p.date}</b></span><span class="spacer"></span><span class="pill ${cls}">${p.status}</span></div>
+    return `<div class="card" id="proj" style="margin-top:12px"><div class="row"><span style="font-size:14px">At ${active}: all ${remaining} contacted by <b>${p.date}</b></span><span class="spacer"></span><span class="pill ${cls}">${p.status}</span></div>
       <div class="small muted" style="margin-top:6px">Expect ${p.replies} replies a week to answer within your ${S().see.commitment}h commitment.</div></div>`;
   }
-  const activeChips = cur => `<div class="chips">${[4, 6, 8, 10].map(n => PL.chip(String(n), cur === n, 'setActive', `data-v="${n}"`)).join('')}</div>`;
+  const activeInput = n => `<div class="numrow"><input class="field num" id="active-n" type="number" inputmode="numeric" min="1" max="${n}" value="${esc(S().ui.activeDraft || S().out.active)}" data-i="activeN" aria-label="How many to reach out to at a time"><span class="small muted">at a time, of ${n}</span></div>`;
+  I.activeN = v => {
+    const n = Math.max(1, PL.approved().length), k = Math.round(Number(v));
+    S().ui.activeDraft = v;
+    if (k >= 1 && k <= n) {
+      S().out.active = k;
+      const pj = document.getElementById('proj'); if (pj) pj.outerHTML = projCard(k, n);
+      const b = document.getElementById('start-btn'); if (b) { b.disabled = false; b.textContent = `Start outreach to ${k}`; }
+    } else { const b = document.getElementById('start-btn'); if (b) { b.disabled = true; b.textContent = `Enter a number from 1 to ${n}`; } }
+  };
   SHEETS.startOut = () => {
-    const s = S(), n = PL.approved().length, dis = PL.disagreements();
+    const s = S(), n = PL.approved().length;
     return {
       title: 'Start outreach', sub: `${esc(s.seq.versions[s.seq.active].name)} approved · ${n} pre-candidates`,
-      body: `${dis.length ? `<div class="group" style="margin-bottom:12px">${PL.row('Sam (recruiter)', `Disagreed on ${dis.length} ${dis.length > 1 ? 'people' : 'person'}`, 'openDis')}</div>` : ''}
-        <div style="font-weight:600;font-size:14px;margin:4px 2px 8px">How many to reach out to at a time</div>
-        ${activeChips(s.out.active)}
+      body: `<div style="font-weight:600;font-size:14px;margin:4px 2px 8px">How many to reach out to at a time</div>
+        ${activeInput(n)}
         <div class="small muted" style="margin:8px 2px 0">When someone replies or finishes the sequence, the next person starts.</div>
         ${projCard(s.out.active, n)}
         <div class="group" style="margin-top:12px">
           <div class="fld-row"><span class="k">From</span><div class="v">farah@nectarsocial.com, connected</div></div>
           <div class="fld-row"><span class="k">Sends</span><div class="v">${s.out.timingApplied ? 'Tue–Thu, 8–10am, their time zone' : 'Weekday mornings, their time zone'}</div></div>
-          <div class="fld-row"><span class="k">Order</span><div class="v">Warm intros first, then by rank</div></div>
         </div>`,
-      foot: `<button class="btn btn-primary" data-a="startOutreach">Start outreach to ${s.out.active}</button>`
+      foot: `<button class="btn btn-primary" id="start-btn" data-a="startOutreach">Start outreach to ${s.out.active}</button>`
     };
   };
-  A.setActive = d => { S().out.active = Number(d.v); };
-  A.openDis = () => PL.openSheet('dis');
-  SHEETS.dis = () => {
-    const dis = PL.disagreements();
-    return {
-      title: 'Where Sam disagreed', sub: 'You each reviewed the shortlist independently',
-      body: dis.map(x => { const c = PL.cand(x.id); return `<div class="card"><div class="row">${PL.avatar(c, 34)}<div style="flex:1"><div style="font-weight:600">${esc(c.name)}</div><div class="small muted">${esc(c.title)} · ${esc(c.co)}</div></div></div>
-        <div class="small" style="margin-top:10px">You kept them. Sam would pass: “${esc(x.why)}”</div>
-        <div class="row" style="margin-top:10px"><button class="btn btn-xs btn-secondary" data-a="disKeep" data-id="${x.id}">Keep</button><button class="btn btn-xs btn-secondary" data-a="disRemove" data-id="${x.id}">Remove from outreach</button></div></div>`; }).join('') || '<p class="muted small">All resolved.</p>',
-      foot: `<button class="btn btn-primary" data-a="openStartOut">Back to start outreach</button>`
-    };
-  };
-  A.openStartOut = () => PL.openSheet('startOut');
-  A.disKeep = d => { S().out.disResolved[d.id] = 'keep'; if (!PL.disagreements().length) PL.openSheet('startOut'); };
-  A.disRemove = d => { const s = S(); s.out.disResolved[d.id] = 'removed'; s.sl.final = (s.sl.final || PL.visible().map(c => c.id)).filter(x => x !== d.id); PL.toast(`${esc(PL.cand(d.id).name)} removed from outreach`); if (!PL.disagreements().length) PL.openSheet('startOut'); };
   A.startOutreach = () => { const s = S(); s.seq.approved = true; s.out.started = true; PL.go('started'); };
 
   PL.outreachLists = () => {
@@ -432,9 +453,9 @@
   };
   SCREENS.started = () => {
     const s = S(), L = PL.outreachLists();
-    const row = (c, i) => `<div class="li tap" data-a="openThread" data-id="${c.id}">${PL.avatar(c, 36)}<div class="b"><div class="t1">${esc(c.name)} · ${esc(c.title)}</div><div class="t2">${c.warm ? `Intro requested: ${esc(c.warm.charAt(0).toLowerCase() + c.warm.slice(1))}` : `Email 1 sent 9:0${Math.min(9, i + 2)}am · next Sep 28`}</div></div><span class="chev">${ic('chev', 'sm')}</span></div>`;
+    const row = (c, i) => `<div class="li tap" data-a="openThread" data-id="${c.id}">${PL.avatar(c, 36)}<div class="b"><div class="t1">${esc(c.name)} · ${esc(c.title)}</div><div class="t2">${c.warm ? `Intro requested: ${esc(c.warm.charAt(0).toLowerCase() + c.warm.slice(1))}` : `Email 1 sent 9:0${Math.min(9, i + 2)}am · next Sep 28`}</div></div></div>`;
     return {
-      title: 'Outreach', back: 'sequence',
+      title: 'Outreach', back: 'sequence', task: 'Outreach started',
       body: `<div class="big-ok"><div class="ring">${ic('check')}</div><h2>Outreach started</h2><p>${L.contacted.length} contacted · ${L.queue.length} in queue${L.held ? ' · 1 held' : ''}</p></div>
         <div class="sec">Just contacted</div><div class="group">${L.contacted.map(row).join('')}</div>
         ${L.held ? `<div class="sec">Held</div><div class="group"><div class="li">${PL.avatar(L.held, 36)}<div class="b"><div class="t1">${esc(L.held.name)} · ${esc(L.held.title)}</div><div class="t2">Contacted by another company on Pathline this week. Starts Oct 1.</div></div></div></div>` : ''}
@@ -443,10 +464,10 @@
       footer: `<button class="btn btn-primary" data-a="go" data-r="monitor">Skip ahead 10 days</button><div class="hint">Simulated time, so you can see replies come in</div>`
     };
   };
-  A.openActive = () => PL.openSheet('active');
+  A.openActive = () => { S().ui.activeDraft = String(S().out.active); PL.openSheet('active'); };
   SHEETS.active = () => {
     const s = S(), n = Math.max(1, PL.approved().length);
-    return { title: 'How many at a time', body: activeChips(s.out.active) + projCard(s.out.active, n), foot: `<button class="btn btn-primary" data-a="closeSheet">Done</button>` };
+    return { title: 'How many at a time', sub: 'Changes save automatically', body: activeInput(n) + projCard(s.out.active, n) };
   };
   A.openThread = d => PL.openSheet('thread', { id: d.id });
   SHEETS.thread = sh => {

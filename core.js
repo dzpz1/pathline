@@ -13,6 +13,8 @@ window.PL = window.PL || {};
     chev: '<path d="M9 6l6 6-6 6"/>',
     check: '<path d="M5 12.5l4.5 4.5L19 7.5"/>',
     x: '<path d="M6 6l12 12M18 6L6 18"/>',
+    up: '<path d="M7 14l5-5 5 5"/>',
+    down: '<path d="M7 10l5 5 5-5"/>',
     menu: '<path d="M4 7h16M4 12h16M4 17h16"/>'
   };
   PL.ic = (n, cls) => `<svg class="ic ${cls || ''}" viewBox="0 0 24 24" aria-hidden="true">${ICONS[n] || ''}</svg>`;
@@ -31,13 +33,17 @@ window.PL = window.PL || {};
     list.map(o => { const v = typeof o === 'object' ? o.v : o, l = typeof o === 'object' ? o.l : o; return `<option value="${esc(v)}" ${String(cur) === String(v) ? 'selected' : ''}>${esc(l)}</option>`; }).join('');
   PL.row = (label, value, action, data, opts) => {
     opts = opts || {};
-    return `<div class="frow ${opts.hl ? 'hl' : ''}" data-a="${action}" ${data || ''}><span class="k">${label}</span><span class="v ${opts.need ? 'need-t' : ''}">${value}</span><span class="chev">${ic('chev', 'sm')}</span></div>`;
+    return `<div class="frow ${opts.hl ? 'hl' : ''} ${opts.off ? 'off' : ''}" data-a="${action}" ${data || ''}><span class="k">${label}</span><span class="v ${opts.need ? 'need-t' : ''}">${value}</span></div>`;
   };
+
+  PL.rankCol = (i, n, action, data) => `<div class="rankcol"><span class="attr-rank">${i + 1}</span><div class="rk-arrows">
+      ${i > 0 ? `<button class="rk" data-a="${action}" ${data} data-d="-1" aria-label="Move up">${ic('up', 'sm')}</button>` : '<span class="rk-sp"></span>'}
+      ${i < n - 1 ? `<button class="rk" data-a="${action}" ${data} data-d="1" aria-label="Move down">${ic('down', 'sm')}</button>` : '<span class="rk-sp"></span>'}</div></div>`;
 
   /* ---------- routes ---------- */
   PL.ROUTES = [
     { id: 'start', m: 0, label: 'Welcome' },
-    { id: 'import', m: 1, label: 'Import & what the role needs', step: 1 },
+    { id: 'import', m: 1, label: 'What the role needs', step: 1 },
     { id: 'requirements', m: 1, label: 'Requirements', step: 2 },
     { id: 'review', m: 1, label: 'Review & pool', step: 3 },
     { id: 'shortlist', m: 1, label: 'Shortlist', step: 4 },
@@ -53,44 +59,45 @@ window.PL = window.PL || {};
     { id: 'onsite', m: 5, label: 'Onsite' }
   ];
   PL.MILESTONES = { 1: 'Shortlist', 2: 'Outreach', 3: 'Monitoring', 4: 'Chat & take-home', 5: 'Review → onsite' };
-  PL.GOALS = { 1: 'Shortlist for outreach', 2: 'Outreach', 3: 'Keep pace with your start date', 4: 'Chat & take-home', 5: 'Review & onsite' };
+  PL.GOALS = { 1: 'Shortlist for outreach', 2: 'Outreach', 3: 'Monitoring', 4: 'Chat & take-home', 5: 'Review & onsite' };
+  PL.STARTS = { 2: 'Starts when your shortlist is ready', 3: 'Starts when outreach begins', 4: 'Starts when someone replies', 5: 'Starts when a take-home comes in' };
   PL.routeIdx = id => PL.ROUTES.findIndex(r => r.id === id);
   PL.stepsIn = m => PL.ROUTES.filter(r => r.m === m && r.step).length;
 
   PL.ABOUT = {
-    start: { g: 'Every hire raises the bar', p: 'Pathline is a recruiting tool for tech companies in their scaling phase. It finds experienced people with real evidence of what a role needs, reaches out on your behalf, and tests them rigorously without losing their interest.', t: ['Start the demo as Farah, CTO at Nectar Social, hiring a Senior PM, AI.', 'Use the steps on the left to jump anywhere.'] },
-    import: { g: 'From job description to what the role needs', p: 'Paste a link or the text; Pathline tells which. The role header shows it understood the role, and the focus is the ranked list of attributes the role needs.', t: ['Tap Import: Nectar’s link is pre-filled.', 'Answer the two questions in the role header.', 'Tap an attribute to see its evidence, then Edit.', 'Hold and drag an attribute to reorder.'] },
+    start: { g: 'Every hire raises the bar', p: 'Pathline is a recruiting tool for tech companies in their scaling phase. It finds experienced people with real evidence of what a role needs, reaches out on your behalf, and tests them rigorously without losing their interest.', t: ['Tap Get started. You’re Farah, CTO at Nectar Social, hiring a Senior PM, AI.', 'Use the steps on the left, or the in-app Menu, to move around.'] },
+    import: { g: 'From job description to what the role needs', p: 'Paste a link or the text; Pathline tells which. The role header shows it understood the role, and the focus is the ranked list of attributes the role needs.', t: ['Tap Import: Nectar’s link is pre-filled.', 'Answer the two questions in the role header.', 'Re-rank with the arrows under a number.', 'Tap a card and edit any line; it saves as you type.', 'Tap Add attribute for suggestions.'] },
     requirements: { g: 'Hard parameters only, as your JD wrote them', p: 'Must-haves are kept word for word and structured so they can be checked against profiles. Pathline also asks about what the JD left out.', t: ['Tap a row to see the original wording.', 'Answer visa sponsorship and relocation.', 'Add a requirement: type, level, Add.'] },
     review: { g: 'How big is your realistic talent pool?', p: 'Set when you need them to start. The funnel narrows from must-haves to people who are strong on your attributes, likely to move, and within your base range. Tap any layer to adjust what’s behind it.', t: ['Change the start date.', 'Tap “Base range fits” and raise the top of the range.', 'Tap “Why 25?”.'] },
-    shortlist: { g: 'The people Pathline sourced', p: 'Everyone here is included by default. Tap a card for their evidence; Pass on anyone who isn’t right, and the next best takes their place.', t: ['Tap a card to see evidence by attribute.', 'Pass on someone, then Undo.', 'Continue to outreach.'] },
-    see: { g: 'Everything candidates see, and when', p: 'Give first: comp, the process and your response commitment are disclosed before candidates are asked for effort. This sits right before the emails because it’s what they disclose.', t: ['Tap a row to fill it in, or use demo values.', 'Open Hiring process and drag a stage.', 'Edit what success looks like.'] },
-    sequence: { g: 'Five emails that reveal more each time', p: 'Sent from Farah’s mailbox. Every fact comes from the company fact bank; personalized lines show their source; blanks block approval.', t: ['Expand an email and edit any text directly.', 'Ask one email to be shorter.', 'Change all emails: tap Growth.', 'Preview as a different pre-candidate.'] },
+    shortlist: { g: 'The people Pathline sourced', p: 'Everyone here is included by default. Tap a card for their evidence; Pass on anyone who isn’t right, and the next best takes their place.', t: ['Tap a card to see evidence by attribute.', 'Pass on someone, then Undo.', 'Continue to outreach: no confirmation step.'] },
+    see: { g: 'Everything candidates see, and when', p: 'Give first: comp, the process and your response commitment are disclosed before candidates are asked for effort. This sits right before the emails because it’s what they disclose.', t: ['Pick a why-now type: that’s enough.', 'Move Equity to “in outreach emails”, then see email 4.', 'Remove a field, then bring it back from Hidden.', 'Add information: relocation support.'] },
+    sequence: { g: 'Five emails that reveal more each time', p: 'Sent from Farah’s mailbox. Every fact comes from the company fact bank; personalized lines show their source; blanks block approval.', t: ['Expand an email and edit any text directly.', 'Tap “Talk it through” under an email’s revise box.', 'Change all emails: tap Growth.', 'Approve, then type how many to reach out to at a time.'] },
     started: { g: 'Outreach is live', p: 'Pathline paces outreach by how many pre-candidates are active at a time. When someone replies or finishes the sequence, the next person starts.', t: ['Change how many are active.', 'Skip ahead 10 days.'] },
     monitor: { g: 'Milestone 3: keep pace with your start date', p: 'Replies are the headline metric; opens are approximate. Suggestions appear only when they’d help, and nothing new joins without your say-so.', t: ['Apply the send-timing suggestion.', 'Review the 4 new matches.', 'Open the replies waiting for you.'] },
     replies: { g: 'The moment of connection', p: 'When a pre-candidate replies, they become a candidate and join the Pathline network. Their reply shows they’re open to a move, so they’re a warm lead for this role and others.', t: ['Open Maya’s reply and choose “Chat first”.', 'Open Aisha’s and go straight to the take-home.'] },
     postchat: { g: 'Gut check first', p: 'The hiring manager’s impression is captured before anything else, so it’s an independent check. Pathline reads the transcript too, but that read stays internal.', t: ['Give a gut check, paste the sample transcript, confirm consent.', 'Send the take-home, or try Pass to see the graceful decline.'] },
-    takehome: { g: 'A take-home that tests every attribute', p: 'Generated from the fact bank around a fictional company, so it’s realistic without being free work. The coverage list shows how many sections test each attribute.', t: ['Expand the sections.', 'Check coverage: Adaptability is weighted up because the chat didn’t show it.'] },
+    takehome: { g: 'A take-home that tests every attribute', p: 'Generated from the fact bank around a fictional company, so it’s realistic without being free work. Each section shows what it tests.', t: ['Each section says what it tests.', 'Adaptability is weighted up because the chat didn’t show it.', 'Change the assignment by voice: Talk it through.'] },
     thsent: { g: 'The candidate knows when they’ll hear back', p: 'Review-by and decision dates come from your response commitment and are tracked. The take-home is AI-graded per attribute, and a strong one boosts the candidate across Pathline if they opt in.', t: ['Skip ahead to when submissions arrive.'] },
     reviewq: { g: 'Milestone 5: decide by the dates you committed to', p: 'Submissions sorted by deadline. Each reviewer decides independently; decisions are revealed after you submit.', t: ['Tap Maya’s card to see her submission.', 'Decide, and see Kaan’s decision revealed.'] },
     onsite: { g: 'Ready for onsites', p: 'Advanced candidates, grouped by scheduling status. Scheduling happens on your own calendar; Pathline nudges when someone hasn’t booked.', t: ['Send a scheduling link.', 'Mark someone as scheduled.'] }
   };
 
   /* ---------- state ---------- */
-  const KEY = 'pathline-prototype-v2';
+  const KEY = 'pathline-prototype-v3';
   PL.initialState = () => ({
-    route: 'start',
+    route: 'start', maxIdx: 0,
     jd: { input: D.JD_URL, parsing: false, parseStep: 0, imported: false, source: '', work: null },
     attrs: D.ATTRS.map(a => Object.assign({}, a, { strong: a.strong.slice(), weak: a.weak.slice() })),
     newAttrId: null,
-    ui: { attrEdit: null, otherOpen: false, addQuery: '', addWarn: false, reqType: 'Skill', reqLevel: 'Uses daily', reqYears: '', reqLabel: '', openEmail: 0, secOpen: { scenario: true }, passReasons: [] },
+    ui: { voice: {}, listening: null, confirmRemove: null, addQuery: '', addWarn: false, reqType: 'Skill', reqLevel: 'Uses daily', reqYears: '', reqLabel: '', openEmail: 0, secOpen: { scenario: true }, passReasons: [] },
     reqs: { minYears: 5, role: 'Product manager', metricsLevel: 'Uses daily', aiEither: true, office: 'Palo Alto', days: 4, visa: null, relocation: null, custom: [] },
-    see: { title: null, whyType: null, whyLine: '', success: D.OUTCOMES.slice(), successEdited: false, reportsTo: '', engineers: '', otherPMs: '', directReports: '0', baseMin: 170, baseMax: 225, equity: '', vesting: '4 yr, 1 yr cliff', bonus: '', start: 'Dec 2026', hm: '', commitment: 48, promoted: {},
+    see: { title: null, whyType: null, whyLine: '', place: {}, hidden: {}, custom: [], reportsTo: '', engineers: '', otherPMs: '', directReports: '0', baseMin: 170, baseMax: 225, equity: '', vesting: '4 yr, 1 yr cliff', bonus: '', start: 'Dec 2026', hm: '', commitment: 48,
       stages: [{ name: 'Take-home assignment', h: 3 }, { name: 'Onsite interview', h: 4 }, { name: 'Final interview', h: 1 }] },
     sl: { dec: {}, final: null },
     seq: { versions: { v1: { name: 'v1 Balanced', kind: 'base', emails: [0, 1, 2, 3, 4].map(() => ({ variant: 'base', hist: [], edits: {}, applied: null })) } },
       order: ['v1'], active: 'v1', preview: null, revising: null, revisingAll: false, approved: false, oneTap: true,
       facts: { rev: '', revShare: 'approx', custNow: '', custThen: '', custShare: 'exact', teamNow: '', teamNext: '', teamShare: 'exact' } },
-    out: { active: 6, started: false, disResolved: {}, timingApplied: false, timingDismissed: false, activeDismissed: false, newAdded: {}, newPassed: {} },
+    out: { active: 6, started: false, timingApplied: false, timingDismissed: false, activeDismissed: false, newAdded: {}, newPassed: {} },
     network: 0, fromYou: 0,
     m4: { status: { c1: 'new', c2: 'new', c3: 'new' }, bookingLink: 'cal.example.com/farah-nectar', chat: { overall: null, want: null, note: '', transcript: '', consent: false },
       thCand: 'c1', timebox: '3h', thSent: false },
@@ -117,6 +124,7 @@ window.PL = window.PL || {};
     const target = PL.routeIdx(route);
     for (let i = 0; i < target; i++) { const f = PL.FILL[PL.ROUTES[i].id]; if (f) f(); }
     S.route = route; S.sheet = null;
+    S.maxIdx = Math.max(S.maxIdx || 0, target);
   };
 
   /* ---------- actions registry ---------- */
@@ -162,11 +170,10 @@ window.PL = window.PL || {};
   function leftHTML() {
     const S = PL.S;
     return `<div class="wordmark"><span class="dotmark"></span>Pathline</div>
-      <div class="kicker">Employer prototype · outbound flow<br>Nectar Social is hiring a Senior PM, AI</div>
+      <div class="kicker">Employer prototype · outbound flow<br>You’re Farah, CTO at Nectar Social, hiring a Senior PM, AI.</div>
       <nav class="nav">${navHTML()}</nav>
       <div class="panel-foot">
-        <div class="network-pill"><b>${S.network}</b><span>in the Pathline network<br><span class="muted small">${S.fromYou} joined through your outreach</span></span></div>
-        <span class="demo-badge">Demo data: candidates, numbers and replies are fictional</span>
+        <span class="demo-badge">Demo data: the job description is Nectar’s public posting; candidates, numbers and replies are fictional</span>
         <button class="linkbtn" data-a="reset">Reset demo</button>
       </div>`;
   }
@@ -178,7 +185,7 @@ window.PL = window.PL || {};
   }
   let panelKey = '';
   function renderPanels() {
-    const S = PL.S, key = `${S.route}|${S.network}|${S.fromYou}`;
+    const S = PL.S, key = `${S.route}`;
     if (key === panelKey) return;
     const routeChanged = panelKey.split('|')[0] !== S.route;
     panelKey = key;
@@ -200,8 +207,10 @@ window.PL = window.PL || {};
     let h = '';
     if (!scr.noBar) {
       const n = PL.stepsIn(r.m);
-      const goal = r.m ? `${PL.GOALS[r.m]}${r.step ? ` · Step ${r.step} of ${n}` : ''}` : '';
-      h += `<div class="appbar">${scr.back ? `<button class="back" data-a="go" data-r="${scr.back}" aria-label="Back">${ic('back', 'lg')}</button>` : ''}<div class="tt"><div class="t">${esc(scr.title)}</div>${goal ? `<div class="goal">${esc(goal)}</div>` : ''}</div></div>`;
+      const sub = `${r.step ? `Step ${r.step} of ${n} · ` : ''}${scr.task || r.label}`;
+      const tasks = PL.needsYou ? PL.needsYou().length : 0;
+      h += `<div class="appbar">${scr.back ? `<button class="back" data-a="go" data-r="${scr.back}" aria-label="Back">${ic('back', 'lg')}</button>` : ''}<div class="tt"><div class="t">${esc(PL.GOALS[r.m])}</div><div class="goal">${esc(sub)}</div></div>
+        <button class="menu-btn" data-a="openMenu">Menu${tasks ? `<span class="badge">${tasks}</span>` : ''}</button></div>`;
       if (r.step) h += `<div class="progress"><i style="width:${r.step / n * 100}%"></i></div>`;
     }
     h += `<div class="scroll ${same ? '' : 'fade-in'}" id="scroll">${scr.body}</div>`;
@@ -271,9 +280,7 @@ window.PL = window.PL || {};
   PL.render = () => { renderPanels(); renderApp(); renderSheet(); renderToast(); };
 
   /* ---------- events ---------- */
-  let suppressClick = false;
   document.addEventListener('click', e => {
-    if (suppressClick) { suppressClick = false; e.preventDefault(); e.stopPropagation(); return; }
     const t = e.target.closest('[data-a]');
     if (!t) return;
     const fn = A[t.dataset.a];
@@ -312,63 +319,8 @@ window.PL = window.PL || {};
     }
   });
 
-  /* ---------- hold-and-drag to reorder ----------
-     Items: [data-sort="listName"] siblings with data-idx. PL.SORT[listName](from, to) applies the move. */
-  let sort = null;
-  const zoom = () => PL.zoom || 1;
-  document.addEventListener('pointerdown', e => {
-    const it = e.target.closest('[data-sort]');
-    if (!it || e.button > 0 || e.target.closest('input,textarea,select,button')) return;
-    sort = { it, x: e.clientX, y: e.clientY, started: false };
-    sort.timer = setTimeout(() => {
-      if (!sort) return;
-      const items = [...it.parentElement.querySelectorAll(':scope > [data-sort]')];
-      sort.items = items; sort.from = items.indexOf(it); sort.to = sort.from;
-      sort.rects = items.map(el => el.getBoundingClientRect());
-      sort.started = true;
-      items.forEach(el => { if (el !== it) el.classList.add('sort-anim'); });
-      it.classList.add('dragging');
-      if (navigator.vibrate) navigator.vibrate(8);
-    }, 280);
-  });
-  document.addEventListener('pointermove', e => {
-    if (!sort) return;
-    const dx = e.clientX - sort.x, dy = e.clientY - sort.y;
-    if (!sort.started) { if (Math.hypot(dx, dy) > 8) { clearTimeout(sort.timer); sort = null; } return; }
-    e.preventDefault();
-    const k = zoom(), r0 = sort.rects[sort.from];
-    sort.it.style.transform = `translateY(${dy / k}px)`;
-    const mid = r0.top + r0.height / 2 + dy;
-    let to = sort.from;
-    sort.rects.forEach((r, i) => { if (i < sort.from && mid < r.top + r.height / 2) to = Math.min(to, i); if (i > sort.from && mid > r.top + r.height / 2) to = Math.max(to, i); });
-    sort.to = to;
-    const gap = sort.rects.length > 1 ? (sort.rects[1].top - sort.rects[0].bottom) : 8;
-    const shift = (r0.height + gap) / k;
-    sort.items.forEach((el, i) => {
-      if (el === sort.it) return;
-      let y = 0;
-      if (sort.from < to && i > sort.from && i <= to) y = -shift;
-      if (sort.from > to && i < sort.from && i >= to) y = shift;
-      el.style.transform = y ? `translateY(${y}px)` : '';
-    });
-  });
-  const endSort = () => {
-    if (!sort) return;
-    clearTimeout(sort.timer);
-    const s = sort; sort = null;
-    if (!s.started) return;
-    suppressClick = true;
-    setTimeout(() => { suppressClick = false; }, 350);
-    s.items.forEach(el => { el.style.transform = ''; el.classList.remove('sort-anim', 'dragging'); });
-    const list = s.it.dataset.sort;
-    if (s.to !== s.from && PL.SORT[list]) { PL.SORT[list](s.from, s.to); PL.save(); }
-    PL.render();
-  };
-  document.addEventListener('pointerup', endSort);
-  document.addEventListener('pointercancel', endSort);
-  document.addEventListener('touchmove', e => { if (sort && sort.started) e.preventDefault(); }, { passive: false });
-  document.addEventListener('contextmenu', e => { if (e.target.closest('[data-sort]')) e.preventDefault(); });
   PL.move = (arr, from, to) => { const [x] = arr.splice(from, 1); arr.splice(to, 0, x); };
+  const zoom = () => PL.zoom || 1;
 
   /* Sheet drag-to-dismiss and horizontal swipe between items */
   let drag = null;
@@ -415,6 +367,51 @@ window.PL = window.PL || {};
     document.documentElement.style.setProperty('--k', k.toFixed(3));
   };
   window.addEventListener('resize', PL.fit);
+
+  /* Simulated voice input: "Talk it through" under a field fills it with a transcript. */
+  PL.VOICE = {};
+  A.talk = d => {
+    const S = PL.S, key = d.t;
+    S.ui.listening = key;
+    setTimeout(() => {
+      PL.S.ui.listening = null;
+      const text = PL.VOICE[key.replace(/-\d+$/, '-n')] || PL.VOICE[key] || '';
+      if (PL.VOICE_APPLY && PL.VOICE_APPLY[key.replace(/-\d+$/, '-n')]) PL.VOICE_APPLY[key.replace(/-\d+$/, '-n')](text, key);
+      else PL.S.ui.voice[key] = text;
+      PL.save(); PL.render();
+    }, 1300);
+  };
+  PL.talkLink = (key, label) => PL.S.ui.listening === key
+    ? `<div class="listening">Listening…</div>`
+    : `<button class="textlink talk" data-a="talk" data-t="${key}">${label || 'Talk it through'}</button>`;
+
+  /* ---------- Menu: what needs you, and every milestone ---------- */
+  A.openMenu = () => PL.openSheet('menu');
+  A.menuGo = d => {
+    PL.S.sheet = null;
+    PL.go(d.r);
+    if (d.open && PL.A[d.open]) PL.A[d.open]({});
+  };
+  PL.SHEETS.menu = () => {
+    const S = PL.S, tasks = PL.needsYou();
+    const ms = [1, 2, 3, 4, 5].map(m => {
+      const idxs = PL.ROUTES.map((r, i) => r.m === m ? i : -1).filter(i => i >= 0);
+      const firstI = idxs[0], lastI = idxs[idxs.length - 1], cur = PL.routeIdx(S.route);
+      const reached = (S.maxIdx || 0) >= firstI || cur >= firstI || (PL.milestoneReady ? PL.milestoneReady(m) : false);
+      const done = (S.maxIdx || 0) > lastI;
+      const status = !reached ? PL.STARTS[m] : done ? 'Done' : (() => { const r = PL.ROUTES[Math.min(Math.max(cur, S.maxIdx || 0), lastI)]; return r.step ? `In progress · Step ${Math.min(r.step, PL.stepsIn(m))} of ${PL.stepsIn(m)}` : 'In progress'; })();
+      const summary = reached && PL.milestoneSummary ? PL.milestoneSummary(m) : '';
+      const target = PL.ROUTES[cur >= firstI && cur <= lastI ? cur : Math.min(Math.max(S.maxIdx || 0, firstI), lastI)].id;
+      return `<div class="mrow ${reached ? '' : 'off'}" ${reached ? `data-a="menuGo" data-r="${target}"` : ''}><span class="mnum">${m}</span><div class="b"><div class="t1">${esc(PL.GOALS[m])}</div><div class="t2">${esc(status)}${summary ? ` · ${esc(summary)}` : ''}</div></div></div>`;
+    }).join('');
+    return {
+      title: 'Senior PM, AI', sub: 'Nectar Social',
+      body: `<div class="sec" style="margin-top:0">Needs you</div>
+        <div class="group">${tasks.length ? tasks.map(t => `<div class="frow" data-a="menuGo" data-r="${t.r}" ${t.open ? `data-open="${t.open}"` : ''}><span class="v" style="-webkit-line-clamp:3">${esc(t.label)}</span>${t.due ? `<span class="due">${esc(t.due)}</span>` : ''}</div>`).join('') : '<div class="frow" style="cursor:default"><span class="v muted">Nothing needs you right now.</span></div>'}</div>
+        <div class="sec">Milestones</div>
+        <div class="group">${ms}</div>`
+    };
+  };
 
   PL.boot = () => { PL.fit(); PL.render(); };
 })(window.PL);

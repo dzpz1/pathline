@@ -24,7 +24,7 @@
         <div class="acts"><button class="btn btn-xs btn-secondary" data-a="dismissActive">Dismiss</button><button class="btn btn-xs btn-primary" data-a="applyActive">Apply</button></div></div>`);
     }
     return {
-      title: 'Outreach', back: 'started',
+      title: 'Outreach', back: 'started', task: 'Monitoring',
       body: `<div class="sim">Simulated: Oct 3, 10 days after outreach started</div>
         <div class="card"><div class="row"><span class="pill ${p.status === 'On track' ? 'acc' : 'warn'}">${p.status}</span><span style="font-size:14px;font-weight:600">for a ${esc(s.see.start.split(' ')[0])} start</span></div>
           <div style="margin-top:10px">${stat('Contacted', 14, 14)}${stat('Opened', 11, 14, true, true)}${stat('Replied', 5, 14)}${stat('Interested', 3, 14)}</div>
@@ -59,7 +59,7 @@
           <div class="cline"><span class="k">Must-haves</span>${esc(PL.mustLine(c))}</div>
           <div class="cline"><span class="k">Rank if added</span>#${c.rankIfAdded} in the queue</div>
           <div class="cand-acts"><button class="btn btn-sm btn-secondary" data-a="newPass" data-id="${c.id}">Pass</button></div></div>`).join('') || '<p class="muted">All reviewed.</p>',
-      foot: list.length ? `<button class="btn btn-primary" data-a="newAddAll">Add ${list.length} to the queue</button>` : `<button class="btn btn-primary" data-a="closeSheet">Done</button>`
+      foot: list.length ? `<button class="btn btn-primary" data-a="newAddAll">Add ${list.length} to the queue</button>` : ''
     };
   };
   A.newPass = d => { S().out.newPassed[d.id] = true; PL.toast(`Passed on ${esc(PL.cand(d.id).name)}`, 'newPass', d.id); };
@@ -90,7 +90,7 @@
         <div class="msg">“${esc(r.msg)}”<div class="small muted" style="margin-top:6px">${esc(r.when)} · reply to email ${r.id === 'c2' ? 1 : 2}</div></div>${act}</div>`;
     }).join('');
     return {
-      title: 'Replies', back: 'monitor',
+      title: 'Replies', back: 'monitor', task: 'Replies',
       body: `<div class="card" style="background:var(--accent-soft);border-color:var(--accent-soft-2);font-size:13.5px;line-height:1.5;color:var(--accent-ink)"><b>3 interested replies.</b> Replying made them candidates: they’ve joined the Pathline network, open to new roles.</div>
         <div style="margin-top:12px">${cards}</div>`,
       footer: `<button class="btn btn-secondary" data-a="go" data-r="reviewq">Skip to take-home reviews</button>`
@@ -123,7 +123,7 @@
     const m = S().m4, c = PL.cand(m.chatCand || 'c1'), ch = m.chat;
     const ok = ch.overall && (!ch.transcript.trim() || ch.consent);
     return {
-      title: 'After the chat', back: 'replies',
+      title: 'After the chat', back: 'replies', task: 'After the chat',
       body: `<div class="row" style="margin-top:4px">${PL.avatar(c, 42)}<div><div style="font-weight:600;font-size:16px">How did the chat with ${esc(first(c))} go?</div><div class="small muted">Before you see anything else.</div></div></div>
         <div class="sec">Overall</div><div class="chips">${['Strong yes', 'Yes', 'Unsure', 'No'].map(x => PL.chip(x, ch.overall === x, 'chatSet', `data-k="overall" data-v="${x}"`)).join('')}</div>
         <div class="sec">Would you want to work with them?</div><div class="chips">${['Yes', 'Not sure', 'No'].map(x => PL.chip(x, ch.want === x, 'chatSet', `data-k="want" data-v="${x}"`)).join('')}</div>
@@ -203,29 +203,29 @@
     const nameOf = t => (SKILL_NAMES[t] || (PL.attr(t) || {}).name || null);
     const secs = D.TAKEHOME.sections.map(sec => {
       const open = s.ui.secOpen[sec.id];
-      const extraLis = sec.id === 'decisions' ? Object.keys(m.extraCover || {}).map(k => `<li>${esc(m.extraCover[k])}</li>`).join('') : '';
+      const extraIds = sec.id === 'decisions' ? Object.keys(m.extraCover || {}) : [];
       let html = sec.html.replace('[[timebox]]', esc(m.timebox.replace('h', ' hours')));
-      if (extraLis) html = html.replace('</ul>', extraLis + '</ul>');
-      const tests = sec.tests.map(nameOf).filter(Boolean);
-      return `<div class="sec-card"><div class="h" data-a="toggleSec" data-k="${sec.id}">${esc(sec.title)}<span class="spacer"></span>${tests.length ? `<span class="small muted" style="font-weight:500">Tests ${tests.length}</span>` : ''}<span class="chev ${open ? 'open' : ''}">${ic('chev', 'sm')}</span></div>
-        ${open ? `<div class="b">${html}${tests.length ? `<div class="tests">${tests.map(t => `<span class="pill acc">${esc(t)}</span>`).join('')}</div>` : ''}</div>` : ''}</div>`;
+      if (extraIds.length) html = html.replace('</ul>', extraIds.map(k => `<li>${esc(m.extraCover[k])}</li>`).join('') + '</ul>');
+      const tests = sec.tests.concat(extraIds).map(nameOf).filter(Boolean);
+      const gapNote = gap && sec.tests.includes(gap) && PL.attr(gap) ? `<div class="gapnote">${esc(PL.attr(gap).name)}: weighted up, not seen in the chat</div>` : '';
+      return `<div class="sec-card ${open ? 'open' : ''}" data-a="toggleSec" data-k="${sec.id}"><div class="h">${esc(sec.title)}</div>
+        ${tests.length ? `<div class="tests-line">Tests: ${tests.map(esc).join(', ')}</div>` : ''}${gapNote}
+        ${open ? `<div class="b">${html}</div>` : ''}</div>`;
     }).join('');
     return {
-      title: 'Take-home', back: 'replies',
+      title: 'Take-home', back: 'replies', task: 'Take-home',
       body: `<div class="row" style="margin-top:4px">${PL.avatar(c, 38)}<div><div style="font-weight:600;font-size:15px">For ${esc(c.name)}</div><div class="small muted">${esc(PL.titleText())} · generated from your role and fact bank</div></div></div>
         <div class="group" style="margin-top:12px"><div class="fld-row"><span class="k">Time box</span><div class="v"><select class="field inline" data-c="timebox">${PL.options(['2h', '3h', '4h'], m.timebox)}</select></div></div>
           <div class="fld-row"><span class="k">AI tools</span><div class="v">Encouraged, and part of the review</div></div>
           <div class="fld-row"><span class="k">Paid</span><div class="v"><span class="small muted">No. Effort signals interest; a strong result boosts them across Pathline.</span></div></div></div>
-        <div class="sec">Coverage</div>
-        <div class="card" style="padding:8px 14px">${rows.map(r => `<div class="cov-row"><span>${esc(r.name)}</span><span class="bar">${r.n ? Array.from({ length: r.n }, () => '<i></i>').join('') : '<span class="need-t">Not covered</span>'}</span><span class="${r.id === gap ? 'gap' : 'small muted'}">${r.id === gap ? 'chat gap' : r.n ? `${r.n} section${r.n > 1 ? 's' : ''}` : ''}</span></div>`).join('')}
-          ${gap ? `<div class="small muted" style="margin:6px 0 4px">Adaptability wasn’t visible in the chat, so the timeline twist in “Decisions” weighs it more heavily.</div>` : ''}</div>
-        ${uncovered.length ? `<div class="flag" style="margin-top:10px"><div><b>${uncovered.map(u => esc(u.name)).join(', ')} ${uncovered.length > 1 ? 'aren’t' : 'isn’t'} tested yet.</b> You can still send it, but we won’t get signal there.<div class="row" style="margin-top:8px;flex-wrap:wrap">${uncovered.map(u => `<button class="btn btn-xs btn-secondary" data-a="coverAttr" data-id="${u.id}">Add a question for ${esc(u.name)}</button>`).join('')}</div></div></div>` : ''}
+        ${uncovered.length ? `<div class="flag" style="margin-top:12px"><div><b>${uncovered.map(u => esc(u.name)).join(', ')} ${uncovered.length > 1 ? 'aren’t' : 'isn’t'} tested yet.</b> You can still send it, but we won’t get signal there.<div class="row" style="margin-top:8px;flex-wrap:wrap">${uncovered.map(u => `<button class="btn btn-xs btn-secondary" data-a="coverAttr" data-id="${u.id}">Add a question for ${esc(u.name)}</button>`).join('')}</div></div></div>` : ''}
         <div class="sec">Assignment</div>${secs}
         <p class="small muted" style="margin:12px 2px 0">${esc(D.TAKEHOME.note)}</p>
-        <div class="change-all"><div class="t">Change the assignment</div><div class="row"><input class="field" id="th-all" placeholder="e.g. make it a mobile flow" data-enter="reviseTH"><button class="btn btn-sm btn-primary" data-a="reviseTH">Apply</button></div></div>`,
+        <div class="change-all"><div class="t">Change the assignment</div><div class="row"><input class="field" id="th-all" value="${esc(s.ui.voice['th-all'] || '')}" placeholder="e.g. make it a mobile flow" data-enter="reviseTH"><button class="btn btn-sm btn-primary" data-a="reviseTH">Apply</button></div>${PL.talkLink('th-all')}</div>`,
       footer: `<button class="btn btn-primary" data-a="sendTH">Approve and send</button>`
     };
   };
+  PL.VOICE['th-all'] = 'Make it a mobile flow instead of a web prototype';
   A.toggleSec = d => { const o = S().ui.secOpen; o[d.k] = !o[d.k]; };
   C.timebox = v => { S().m4.timebox = v; };
   A.coverAttr = d => {
@@ -235,7 +235,7 @@
     S().ui.secOpen.decisions = true;
     PL.toast(`Added a question for ${esc(a ? a.name : d.id)} to “Decisions”`);
   };
-  A.reviseTH = () => { const el = document.getElementById('th-all'); if (!el || !el.value.trim()) { if (el) el.focus(); return; } PL.toast('In this prototype, edit sections directly. Prompt revisions work like the emails.'); };
+  A.reviseTH = () => { const el = document.getElementById('th-all'); if (!el || !el.value.trim()) { if (el) el.focus(); return; } delete S().ui.voice['th-all']; PL.toast('In this prototype, the assignment text is fixed. Prompt revisions work like the emails.'); };
   A.sendTH = () => { const m = S().m4; m.thSent = true; m.status[m.thCand || 'c1'] = 'sent'; PL.go('thsent'); };
   PL.FILL.postchat = () => { const m = S().m4; if (!m.chatCand) m.chatCand = 'c1'; };
   PL.FILL.takehome = () => { const m = S().m4; if (!m.thCand) m.thCand = 'c1'; if (m.status[m.thCand] === 'new' || m.status[m.thCand] === 'waiting') m.status[m.thCand] = 'takehome'; };
@@ -245,7 +245,7 @@
     const s = S(), m = s.m4, c = PL.cand(m.thCand || 'c1');
     const rev = { 24: 'Oct 14', 48: 'Oct 15', 72: 'Oct 16' }[s.see.commitment] || 'Oct 15';
     return {
-      title: 'Take-home sent', back: 'takehome',
+      title: 'Take-home sent', back: 'takehome', task: 'Take-home sent',
       body: `<div class="big-ok"><div class="ring">${ic('check')}</div><h2>Take-home sent</h2><p>to ${esc(c.name)}</p></div>
         <div class="group">
           <div class="fld-row"><span class="k">Due</span><div class="v">8pm, Oct 13 <span class="small muted">(they picked, within 7 days)</span></div></div>
@@ -272,7 +272,7 @@
     const card = x => {
       const c = PL.cand(x.id), mine = m5.mine[x.id];
       const strong = s.attrs.filter(a => x.grades[a.id] === 'Strong').map(a => a.name), med = s.attrs.filter(a => x.grades[a.id] === 'Medium').map(a => a.name);
-      return `<div class="cand tapcard" data-a="openSub" data-id="${x.id}"><div class="cand-top">${PL.avatar(c)}<div style="flex:1"><div class="cand-name">${esc(c.name)} · ${esc(c.title)}</div><div class="cand-sub">Submitted ${esc(x.submitted)}</div></div><span class="chev">${ic('chev', 'sm')}</span></div>
+      return `<div class="cand tapcard" data-a="openSub" data-id="${x.id}"><div class="cand-top">${PL.avatar(c)}<div style="flex:1"><div class="cand-name">${esc(c.name)} · ${esc(c.title)}</div><div class="cand-sub">Submitted ${esc(x.submitted)}</div></div></div>
         <div class="cline" style="margin-top:10px"><span class="k">Due</span><span class="${x.left <= 12 ? 'hot-t' : ''}">${esc(x.due)} · ${x.left}h left</span></div>
         <div class="cline"><span class="k">Strong</span>${esc(strong.join(', ') || 'None')}</div>
         ${med.length ? `<div class="cline"><span class="k">Medium</span>${esc(med.join(', '))}</div>` : ''}
@@ -280,7 +280,7 @@
         <div class="cand-acts"><button class="btn btn-sm btn-primary" data-a="openDecide" data-id="${x.id}">Decide</button></div></div>`;
     };
     return {
-      title: 'Take-home reviews', back: 'thsent',
+      title: 'Take-home reviews', back: 'thsent', task: 'Take-home reviews',
       body: `<div class="sim">Simulated: Oct 14, 7am</div>
         <div class="card"><div style="font-weight:600;font-size:15px">${pending.length} to review${pending.some(x => x.left <= 12) ? ' · 1 due today' : ''}</div><div class="small muted" style="margin-top:3px">Deadlines are ${s.see.commitment}h from submission. Candidates were told these dates.</div></div>
         <div style="margin-top:10px">${pending.map(card).join('') || '<p class="muted small">All caught up.</p>'}</div>
@@ -294,7 +294,7 @@
     const rows = s.attrs.map(a => { const g = x.grades[a.id] || 'Unknown'; return `<div class="grade-row"><span class="nm">${esc(a.name)}</span><span class="lv ${gradeCls(g)}">${esc(g)}</span></div>${x.excerpt[a.id] ? `<div class="small muted" style="margin:-2px 0 8px;line-height:1.45">${esc(x.excerpt[a.id])}</div>` : ''}`; }).join('');
     return {
       title: esc(c.name), sub: `Take-home · submitted ${esc(x.submitted)}`, tall: true,
-      body: `<div class="group">${PL.row('Submission', 'Relay prototype and quality plan', 'noop')}</div>
+      body: `<div class="card" style="font-size:14px"><div style="font-weight:600">Relay prototype and quality plan</div><div class="small muted" style="margin-top:2px">Clickable prototype link and a 1-page plan (demo)</div></div>
         <div class="sec">Grades by attribute</div><div class="card" style="padding:4px 14px">${rows}
           <div class="grade-row"><span class="nm">Gen AI (skill)</span><span class="lv ${gradeCls(x.ai)}">${esc(x.ai)}</span></div>
           <div class="grade-row"><span class="nm">Metrics (skill)</span><span class="lv ${gradeCls(x.metrics)}">${esc(x.metrics)}</span></div></div>
@@ -362,7 +362,7 @@
       return `<div class="li">${PL.avatar(c, 36)}<div class="b"><div class="t1">${esc(c.name)}</div><div class="t2">Onsite ${esc(o.date)} · ${onsiteStage.h}h · ${esc(s.reqs.office)}</div></div></div>`;
     };
     return {
-      title: 'Onsite', back: 'reviewq',
+      title: 'Onsite', back: 'reviewq', task: 'Onsite',
       body: `<div class="sec" style="margin-top:4px">To schedule</div><div class="group">${g('toschedule').map(row).join('') || '<div class="li"><div class="b t2">Nobody waiting</div></div>'}</div>
         <div class="sec">Scheduled</div><div class="group">${g('scheduled').map(row).join('') || '<div class="li"><div class="b t2">None yet</div></div>'}</div>
         <div class="sec">Done</div><div class="group"><div class="li"><div class="b"><div class="t2">Onsite and final interview tools are out of scope for this prototype.</div></div></div></div>
@@ -379,4 +379,45 @@
   });
   C.schedDate = v => { S().ui.schedDate = v; };
   A.markScheduled = d => { const o = S().m5.onsite.find(x => x.id === d.id); o.state = 'scheduled'; o.date = S().ui.schedDate; o.nudge = false; PL.S.sheet = null; PL.toast('Scheduled'); };
+
+  /* =========================================================
+     Menu data: what needs you, and milestone summaries
+     ========================================================= */
+  const reached = id => (S().maxIdx || 0) >= PL.routeIdx(id) || PL.routeIdx(S().route) >= PL.routeIdx(id);
+  PL.needsYou = () => {
+    const s = S(), t = [];
+    if (s.jd.imported && (!s.see.title || !s.jd.work)) t.push({ label: 'Answer questions about your posting', r: 'import' });
+    if (reached('see') && !s.seq.approved) {
+      const m = PL.seeMissing ? PL.seeMissing() : [];
+      if (m.length) t.push({ label: `${m.length} detail${m.length > 1 ? 's' : ''} needed before the emails: ${m.join(', ')}`, r: 'see' });
+    }
+    if (reached('monitor')) {
+      const newReplies = D.REPLIES.filter(r => s.m4.status[r.id] === 'new').length;
+      if (newReplies) t.push({ label: `${newReplies} repl${newReplies > 1 ? 'ies' : 'y'} to answer`, due: '31h left', r: 'replies' });
+      const waiting = D.REPLIES.filter(r => s.m4.status[r.id] === 'waiting' || s.m4.status[r.id] === 'another');
+      waiting.forEach(r => t.push({ label: `Add notes from your chat with ${first(PL.cand(r.id))}`, r: 'replies' }));
+      const nm = D.NEW_MATCHES.filter(n => !s.out.newAdded[n.id] && !s.out.newPassed[n.id]).length;
+      if (nm) t.push({ label: `${nm} new people match your criteria`, r: 'monitor', open: 'openNew' });
+      const p = PL.projection(s.out.active, Math.max(1, PL.approved().length));
+      if (p.status !== 'On track') t.push({ label: `${p.status} for a ${s.see.start.split(' ')[0]} start`, r: 'monitor' });
+    }
+    if (reached('reviewq')) {
+      const pend = D.SUBMISSIONS.filter(x => !s.m5.final[x.id]);
+      if (pend.length) t.push({ label: `${pend.length} take-home${pend.length > 1 ? 's' : ''} to review`, due: pend.some(x => x.left <= 12) ? '1 due today' : '', r: 'reviewq' });
+      s.m5.onsite.filter(o => o.state === 'toschedule' && o.nudge).forEach(o => t.push({ label: `${first(PL.cand(o.id))} hasn’t booked an onsite`, due: '3 days', r: 'onsite' }));
+      s.m5.onsite.filter(o => o.state === 'toschedule' && !o.sent).forEach(o => t.push({ label: `Send ${first(PL.cand(o.id))} a scheduling link`, r: 'onsite' }));
+    }
+    return t;
+  };
+  /* Chat & take-home opens as soon as replies exist; review opens once a take-home is out. */
+  PL.milestoneReady = m => (m === 4 && reached('monitor')) || (m === 5 && (S().m4.thSent || reached('reviewq')));
+  PL.milestoneSummary = m => {
+    const s = S();
+    if (m === 1) return s.sl.final ? `${s.sl.final.length} pre-candidates` : '';
+    if (m === 2) return s.out.started ? `${PL.approved().length} pre-candidates · ${s.out.active} at a time` : '';
+    if (m === 3) return reached('monitor') ? '14 contacted · 5 replies' : '';
+    if (m === 4) return reached('replies') ? `3 replies${s.m4.thSent ? ' · take-home sent' : ''}` : '';
+    if (m === 5) return reached('reviewq') ? `${D.SUBMISSIONS.length} take-homes · ${s.m5.onsite.length} onsites` : '';
+    return '';
+  };
 })(window.PL);

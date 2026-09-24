@@ -149,6 +149,13 @@ D.FACTS = [
   '$1,000/month housing stipend for living near the office'
 ];
 
+D.INFO_SUGGESTIONS = [
+  { label: 'Relocation support', value: '$1,000/month housing stipend for living near the office', src: 'From your job description' },
+  { label: 'Remote flexibility', value: '3 remote flex days per quarter, after the first 3 months', src: 'From your job description' },
+  { label: 'Benefits', value: 'Health, vision and dental, 401(k) match, ClassPass, free lunch', src: 'From your job description' },
+  { label: 'Visa sponsorship', value: '__VISA__', src: 'From your answer on Requirements' }
+];
+
 D.HMS = ['Farah Uraizee · CTO & Co-founder', 'Joe', 'Misbah', 'Kaan'];
 
 /* ---------- Candidates (fictional) ----------
@@ -283,31 +290,35 @@ D.EVIDENCE_POOLS = {
 };
 
 /* ---------- Outreach emails ---------- */
-/* Tokens: [[first]] [[whyYou]] [[title]] [[base]] [[stagesLine]] [[stagesDetail]] [[totalHours]]
-   [[commitment]] [[outcome1]] [[whyNow]] [[reportsTo]] [[engineers]]
-   Growth-only optional tokens: [[gRevenue]] [[gCustomers]] [[gTeam]]
-   Lines starting with "- " are list items. */
+/* Tokens are filled from "What candidates will see". A token that is empty because its field is hidden or
+   shown only after a reply is left out; a paragraph that is only that token is dropped. A field that is shown
+   but not filled in becomes a blank. Lines starting with "- " are list items.
+   [[first]] [[whyYou]] [[title]] [[baseLine]] [[processLine]] [[processDetail]] [[whyNow]] [[teamLine]] [[extras]]
+   Growth-only: [[gRevenue]] [[gCustomers]] [[gTeam]] */
 D.EMAILS = {
   base: [
-    { day: 0, theme: 'Hook', subject: 'Senior PM, AI at Nectar Social', reveals: 'Company, why you, role, base range, process',
+    { day: 0, theme: 'Hook', subject: 'Senior PM, AI at Nectar Social', reveals: 'Company, why you, the role, base range, process',
       base: ['Hey [[first]],',
         'I’m Farah, CTO & Co-Founder at Nectar Social. We’re the Applied AI category leader in social, and we replace a legacy SaaS player every two weeks. Customers include OLIPOP, Oura, Figma, Unilever and e.l.f. Cosmetics, and we have official data partnerships with Meta, TikTok, Reddit, LinkedIn and X.',
         '[[whyYou]]',
-        'We’re hiring a [[title]] to own AI across our platform, spanning intelligence, automation and creator workflows. It’s hands-on: you’d work directly with customers and engineering, decide what gets built, and ship it. Base is [[base]] plus early equity, based in Palo Alto.',
-        'The process is [[stagesLine]], and we reply within [[commitment]] at every step.',
+        'We’re hiring a [[title]] to own AI across our platform, spanning intelligence, automation and creator workflows. It’s hands-on: you’d work directly with customers and engineering, decide what gets built, and ship it.',
+        '[[baseLine]]',
+        '[[processLine]]',
         'Worth a conversation?', 'Farah'],
       shorter: ['Hey [[first]],',
         'I’m Farah, CTO & Co-Founder at Nectar Social, the Applied AI leader in social. OLIPOP, Oura, Figma and Unilever run on us.',
         '[[whyYou]]',
-        'We’re hiring a [[title]] to own AI across the platform. Base [[base]] plus early equity, Palo Alto. Process: [[stagesLine]]; replies within [[commitment]].',
+        'We’re hiring a [[title]] to own AI across the platform. [[baseLine]]',
+        '[[processLine]]',
         'Worth a conversation?', 'Farah'],
       warmer: ['Hi [[first]],',
         'I’m Farah, CTO & Co-Founder at Nectar Social, and I wanted to reach out to you personally.',
         '[[whyYou]]',
-        'We’re the Applied AI category leader in social (brands like OLIPOP, Oura, Figma and Unilever run on us) and we’re looking for a [[title]] to shape how AI shows up across everything we build. It’s hands-on and close to customers and engineering. Base is [[base]] plus early equity, in Palo Alto.',
-        'The process is [[stagesLine]], and you’ll always hear back from us within [[commitment]].',
+        'We’re the Applied AI category leader in social (brands like OLIPOP, Oura, Figma and Unilever run on us) and we’re looking for a [[title]] to shape how AI shows up across everything we build. It’s hands-on and close to customers and engineering.',
+        '[[baseLine]]',
+        '[[processLine]]',
         'Would you be open to a conversation? I’d love to hear what you’re working on.', 'Farah'] },
-    { day: 3, theme: 'The role, day to day', subject: 'Re: Senior PM, AI at Nectar Social', reveals: 'Teams, product surface, what you’d own, a 12-month outcome',
+    { day: 3, theme: 'The role, day to day', subject: 'Re: Senior PM, AI at Nectar Social', reveals: 'Teams, product surface, what you’d own',
       base: ['Hey [[first]],',
         'Wanted to share what this role looks like day to day.',
         'We have four engineering teams (Connectors, Intelligence, Experiences, Foundations), and the product surface is wide: social listening, earned media analytics, AI-powered automations, creator workflows, and integrations across TikTok, Instagram, Reddit and more.',
@@ -315,12 +326,10 @@ D.EMAILS = {
         '- Own the strategy for our AI features, from discovery through launch',
         '- Sit in customer calls weekly to see how social and brand teams actually work',
         '- Partner with engineering on prompting systems and model-powered features, and ship quickly',
-        '- Define how we measure AI quality, like accuracy and automation impact, and make real trade-offs with it',
-        'Here’s what success looks like a year from now: [[outcome1]].',
+        '- Define and track the metrics for our AI features, like accuracy and automation impact',
         'Happy to dig into any of this if you’re curious.'],
       shorter: ['Hey [[first]],',
-        'Quick look at the day to day: four engineering teams, a wide surface (listening, analytics, automations, creator workflows), and you’d own AI across it: strategy, weekly customer calls, shipping with engineering, and the quality metrics.',
-        'Success a year from now: [[outcome1]].',
+        'Quick look at the day to day: four engineering teams, a wide surface (listening, analytics, automations, creator workflows), and you’d own AI across it: strategy, weekly customer calls, shipping with engineering, and the metrics.',
         'Happy to share more.'],
       warmer: ['Hi [[first]],',
         'I thought it might help to paint a picture of what your days would actually look like.',
@@ -329,8 +338,7 @@ D.EMAILS = {
         '- Own the strategy for our AI features, from discovery through launch',
         '- Spend time with customers every week, seeing how social and brand teams really work',
         '- Build side by side with engineering on prompting systems and model-powered features',
-        '- Define what great AI quality means for us, and hold us to it',
-        'A year from now, we’d love to be celebrating this together: [[outcome1]].',
+        '- Define and track the metrics that tell us our AI is working',
         'If any of this sparks questions, I’m happy to talk it through.'] },
     { day: 7, theme: 'Why now', subject: 'Re: Senior PM, AI at Nectar Social', reveals: 'Market timing, traction, why the role is open',
       base: ['Hey [[first]],',
@@ -351,19 +359,25 @@ D.EMAILS = {
         'Brands everywhere are realizing social is their most important owned channel, and the tools haven’t caught up. That’s the gap we’re filling, and customers like Unilever, OLIPOP, Oura and Figma are already with us. We also just closed a Series A from Menlo Ventures x Anthropic (Anthology Fund), GV and True Ventures.',
         '[[whyNow]] You’d have real ownership, a direct say in strategy, and early equity with meaningful upside.',
         'If that sounds like the kind of place you’d thrive, I’d really love to connect.'] },
-    { day: 12, theme: 'People + process', subject: 'Re: Senior PM, AI at Nectar Social', reveals: 'Reports to, team size, process and time cost',
+    { day: 12, theme: 'People + process', subject: 'Re: Senior PM, AI at Nectar Social', reveals: 'Team, process and time cost, anything else you chose to share',
       base: ['Hey [[first]],',
-        'Two things people usually ask about: who they’d work with, and what the process looks like.',
-        'You’d report to [[reportsTo]] and work with [[engineers]] engineers across our four teams, alongside a founding team that scaled Facebook Groups to over a billion users.',
-        'The process is [[stagesDetail]]. That’s about [[totalHours]] hours of your time in total, and we reply within [[commitment]] at every step.',
+        'A few things people usually ask about before a first conversation.',
+        '[[teamLine]]',
+        'You’d also be working alongside a founding team that scaled Facebook Groups to over a billion users.',
+        '[[processDetail]]',
+        '[[extras]]',
         'If it helps, I’m happy to connect you with someone on the team for an informal chat first.'],
       shorter: ['Hey [[first]],',
-        'You’d report to [[reportsTo]] and work with [[engineers]] engineers. The process is [[stagesDetail]] (about [[totalHours]] hours in total), with replies within [[commitment]].',
+        '[[teamLine]]',
+        '[[processDetail]]',
+        '[[extras]]',
         'Happy to intro you to someone on the team first.'],
       warmer: ['Hi [[first]],',
-        'I know the people matter as much as the role, so here’s who you’d be working with.',
-        'You’d report to [[reportsTo]] and work alongside [[engineers]] engineers across our four teams, with a founding team that scaled Facebook Groups to over a billion users.',
-        'And so there are no surprises: the process is [[stagesDetail]], about [[totalHours]] hours of your time in total. We’ll always reply within [[commitment]].',
+        'I know the people matter as much as the role, so here’s a bit more.',
+        '[[teamLine]]',
+        'You’d be alongside a founding team that scaled Facebook Groups to over a billion users.',
+        '[[processDetail]]',
+        '[[extras]]',
         'If you’d like to meet someone on the team informally first, I’d be glad to set that up.'] },
     { day: 18, theme: 'Graceful close', subject: 'Re: Senior PM, AI at Nectar Social', reveals: 'A “later” option and a referral ask',
       base: ['Hey [[first]],',
@@ -378,12 +392,13 @@ D.EMAILS = {
         'Wishing you the best either way,', 'Farah'] }
   ],
   growth: [
-    { day: 0, theme: 'Hook: momentum', subject: 'Nectar Social is scaling: Senior PM, AI', reveals: 'Momentum up front, why you, role, base range',
+    { day: 0, theme: 'Hook: momentum', subject: 'Nectar Social is scaling: Senior PM, AI', reveals: 'Momentum up front, why you, the role, base range',
       base: ['Hey [[first]],',
         'I’m Farah, CTO & Co-Founder at Nectar Social. We replace a legacy SaaS player every two weeks, and we just closed a Series A from Menlo Ventures x Anthropic (Anthology Fund), GV and True Ventures.',
         '[[gRevenue]]',
         '[[whyYou]]',
-        'We’re hiring a [[title]] to own AI as we scale. Base is [[base]] plus early equity, in Palo Alto. The process is [[stagesLine]], with replies within [[commitment]].',
+        'We’re hiring a [[title]] to own AI as we scale. [[baseLine]]',
+        '[[processLine]]',
         'Worth a conversation?', 'Farah'] },
     { day: 3, theme: 'The growth story', subject: 'Re: Nectar Social is scaling: Senior PM, AI', reveals: 'Customers, data partnerships, growth numbers you chose to share',
       base: ['Hey [[first]],',
@@ -392,17 +407,18 @@ D.EMAILS = {
         '- Official data partnerships with Meta, TikTok, Reddit, LinkedIn and X',
         '- [[gCustomers]]',
         'Social has become the most important owned channel for brands, and the tooling hasn’t kept up. We’re building that layer, AI-native from day one.'] },
-    { day: 7, theme: 'What growth means for the role', subject: 'Re: Nectar Social is scaling: Senior PM, AI', reveals: 'Scope expanding with the company; 12-month outcome',
+    { day: 7, theme: 'What growth means for the role', subject: 'Re: Nectar Social is scaling: Senior PM, AI', reveals: 'Scope expanding with the company, why now',
       base: ['Hey [[first]],',
         'Here’s what that growth means for this role.',
         'Today, AI touches a few of our workflows. Over the next year it needs to run through all four engineering teams: Connectors, Intelligence, Experiences and Foundations. You’d set that direction.',
-        'Here’s what success looks like a year from now: [[outcome1]].',
         '[[whyNow]]'] },
-    { day: 12, theme: 'Growth for you', subject: 'Re: Nectar Social is scaling: Senior PM, AI', reveals: 'Team growth, early equity, people and process',
+    { day: 12, theme: 'Growth for you', subject: 'Re: Nectar Social is scaling: Senior PM, AI', reveals: 'Team growth, early equity, the people and the process',
       base: ['Hey [[first]],',
         '[[gTeam]]',
         'Early hires here grow with the company: early equity with meaningful upside, and scope that expands as we do.',
-        'You’d report to [[reportsTo]] and work with [[engineers]] engineers. The process is [[stagesDetail]], and we reply within [[commitment]].'] },
+        '[[teamLine]]',
+        '[[processDetail]]',
+        '[[extras]]'] },
     { day: 18, theme: 'Graceful close', subject: 'Re: Nectar Social is scaling: Senior PM, AI', reveals: 'A “later” option and a referral ask',
       base: ['Hey [[first]],',
         'We’re moving quickly, so I’ll stop here. If now isn’t right, reply “later” and I’ll check back in a few months. And if someone comes to mind, I’d really appreciate an intro.',
@@ -413,7 +429,7 @@ D.EMAILS = {
 D.GROWTH_PLAN = [
   'Hook: momentum up front (a legacy player replaced every two weeks, the Series A), then the role and base range',
   'The growth story: customers, data partnerships, and any growth numbers you choose to share',
-  'What growth means for this role: AI scope expands across all four teams',
+  'What growth means for this role: AI scope expands across all four teams, and why now',
   'Growth for you: team growth, early equity, the people and the process',
   'Graceful close'
 ];

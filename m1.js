@@ -9,18 +9,8 @@
      ========================================================= */
   SCREENS.start = () => ({
     noBar: true,
-    body: `<div class="start">
-      <div class="brand"><i></i>Pathline</div>
-      <h1>Every hire <em>raises</em> the bar.</h1>
-      <p>For tech companies in their scaling phase. Pathline finds experienced people with real evidence of what your role needs, reaches out on your behalf, and tests them rigorously without losing their interest.</p>
-      <div class="fly">
-        <div class="fly-h">How Pathline gets better with every hire</div>
-        ${['Find pre-candidates with strong evidence on your ideal attributes', 'Reach out with the facts up front', 'Those who reply join Pathline, open to new roles', 'Take-homes add strong, reusable signal', 'Better matches on both sides', 'More candidates and companies join']
-          .map((t, i) => `<div class="fly-i ${i === 5 ? 'loop' : ''}"><b>${i === 5 ? '↻' : i + 1}</b><span>${t}</span></div>`).join('')}
-      </div>
-      <div class="you">You’re <b>Farah, CTO at Nectar Social</b>, hiring a Senior PM, AI. The job description is Nectar’s public posting; candidates, numbers and replies are fictional.</div>
-    </div>`,
-    footer: `<button class="btn btn-primary" data-a="go" data-r="import">Start the demo</button>`
+    body: `<div class="splash"><div class="splash-mark"><i></i></div><div class="splash-name">Pathline</div><div class="splash-tag">Every hire raises the bar.</div></div>`,
+    footer: `<button class="btn btn-primary" data-a="go" data-r="import">Get started</button>`
   });
 
   /* =========================================================
@@ -50,17 +40,18 @@
     if (!j.imported) {
       return {
         title: 'New role', back: 'start',
+        task: 'What the role needs',
         body: `<div class="intro">In about 10 minutes, you’ll have a shortlist of people to reach out to.</div>
           <div class="h1">What’s the role?</div>
           <textarea class="field jd-in" data-i="jdInput" rows="4" placeholder="Paste a job description or a link" aria-label="Job description or link">${esc(j.input)}</textarea>
-          <div class="detect" id="jd-detect">${esc(detectText(j.input))}</div>
+          <div class="detect" id="jd-detect">${S().ui.listening === 'jd' ? 'Listening…' : esc(detectText(j.input))}</div>
           <button class="textlink" data-a="openOtherWays">Other ways to add it</button>`,
         footer: `<button class="btn btn-primary" data-a="importJD" ${j.input.trim() ? '' : 'disabled'}>Import</button>`
       };
     }
     const rc = roleCard();
     return {
-      title: 'What the role needs', back: 'start',
+      title: 'What the role needs', back: 'start', task: 'What the role needs',
       body: `<div class="src-line">From ${esc(j.source)} · <button class="textlink" data-a="jdChange">Change</button></div>
         ${rc.html}
         <div class="sec">What the role needs</div>
@@ -73,10 +64,14 @@
   SHEETS.otherWays = () => ({
     title: 'Other ways to add it',
     body: `<div class="group">
-      <div class="frow" data-a="protoOnly"><span class="k" style="width:auto;flex:1;color:var(--ink);font-size:14.5px">Upload a file</span><span class="v small muted" style="flex:none">PDF or DOCX</span><span class="chev">${ic('chev', 'sm')}</span></div>
-      <div class="frow" data-a="protoOnly"><span class="k" style="width:auto;flex:1;color:var(--ink);font-size:14.5px">Talk it through</span><span class="v small muted" style="flex:none">about 2 minutes</span><span class="chev">${ic('chev', 'sm')}</span></div></div>`
+      <div class="frow" data-a="protoOnly"><span class="k" style="width:auto;flex:1;color:var(--ink);font-size:14.5px">Upload a file</span><span class="v small muted" style="flex:none">PDF or DOCX</span></div>
+      <div class="frow" data-a="talkJD"><span class="k" style="width:auto;flex:1;color:var(--ink);font-size:14.5px">Talk it through</span><span class="v small muted" style="flex:none">about 2 minutes</span></div></div>`
   });
   A.protoOnly = () => { PL.S.sheet = null; PL.toast('In this prototype, paste a link or the text'); };
+  A.talkJD = () => { PL.S.sheet = null; A.talk({ t: 'jd' }); };
+  PL.VOICE.jd = 'We’re hiring a senior product manager for AI at Nectar Social, in Palo Alto, four days a week in the office. They’d own our AI features end to end, work with engineering on prompting and model-powered features, talk to brand and social teams every week, and own the metrics. Five-plus years as a PM, strong with data, and experience or real interest in generative AI.';
+  PL.VOICE_APPLY = PL.VOICE_APPLY || {};
+  PL.VOICE_APPLY.jd = text => { S().jd.input = text; };
   A.importJD = () => {
     const j = S().jd;
     j.source = isUrl(j.input) ? (() => { try { return new URL(j.input.trim()).hostname; } catch (e) { return 'your link'; } })() : 'pasted text';
@@ -101,86 +96,79 @@
 
   /* ---------- attributes ---------- */
   function attrCard(a, i) {
-    const s = S();
+    const s = S(), n = s.attrs.length;
     const label = a.suggested ? '<span class="tag-t">Suggested</span>' : a.yourWords ? '<span class="tag-t">Your words</span>' : '';
-    return `<div class="attr ${s.newAttrId === a.id ? 'new' : ''}" data-sort="attrs" data-a="openAttr" data-id="${a.id}">
-      <div class="attr-top"><span class="attr-rank">${i + 1}</span><span class="attr-name">${esc(a.name)}</span>${label}<span class="chev">${ic('chev', 'sm')}</span></div>
-      <div class="attr-def">${esc(a.def)}</div><div class="attr-why"><b>Why:</b> ${esc(a.why)}</div></div>`;
+    return `<div class="attr ${s.newAttrId === a.id ? 'new' : ''}" data-a="openAttr" data-id="${a.id}">
+      ${PL.rankCol(i, n, 'moveAttr', `data-id="${a.id}"`)}
+      <div class="attr-body"><div class="attr-top"><span class="attr-name">${esc(a.name)}</span>${label}</div>
+        <div class="attr-def">${esc(a.def)}</div><div class="attr-why"><b>Why:</b> ${esc(a.why)}</div>
+        <button class="textlink look" data-a="openAttrEv" data-id="${a.id}">What we’ll look for</button></div></div>`;
   }
   PL.BODY.attributes = () => {
     const s = S();
-    const recAdded = s.attrs.some(a => a.id === 'hon') || s.attrs.some(a => a.merged);
-    const others = D.OTHER_SUGGESTIONS.filter(o => !s.attrs.some(a => a.id === o.id));
-    return `<p class="sort-hint">Ranked by impact over the next 12–18 months. Hold and drag to reorder.</p>
+    const sugg = suggestions().length;
+    return `<p class="sort-hint">Ranked by impact over the next 12–18 months. Use the arrows to re-rank.</p>
       <div class="attr-list">${s.attrs.map(attrCard).join('')}</div>
       ${s.attrs.length >= 8 ? `<p class="small muted" style="margin:10px 2px 0">Each extra attribute lowers the weight of the others.</p>` : ''}
-      ${!recAdded ? `<div class="rec"><div class="rec-t">Suggested: Intellectual honesty</div><p>Not in your JD, but AI PMs need to call it when a feature isn’t working, including their own.</p><button class="btn btn-sm btn-secondary" data-a="addRec">Add</button></div>` : ''}
-      <button class="btn btn-sm btn-secondary" style="margin-top:12px" data-a="openAddAttr">Add attribute</button>
-      ${others.length ? `<button class="textlink" style="display:block;margin-top:14px" data-a="toggleOthers">${s.ui.otherOpen ? 'Hide other suggestions' : `Other suggestions (${others.length})`}</button>
-      ${s.ui.otherOpen ? `<div class="group" style="margin-top:8px">${others.map(o => `<div class="li"><div class="b"><div class="t1">${esc(o.name)}</div><div class="t2">${esc(o.why)}</div></div><button class="btn btn-xs btn-secondary" data-a="addOther" data-id="${o.id}">Add</button></div>`).join('')}</div>` : ''}` : ''}`;
+      <div class="add-row" data-a="openAddAttr"><div class="t1">Add attribute</div><div class="t2">${sugg ? `${sugg} suggestion${sugg > 1 ? 's' : ''} for this role, or search the library` : 'Search the library, or write your own'}</div></div>`;
   };
-  PL.SORT.attrs = (from, to) => { PL.move(S().attrs, from, to); S().newAttrId = null; };
-  A.toggleOthers = () => { S().ui.otherOpen = !S().ui.otherOpen; };
-  A.openAttr = d => { S().ui.attrEdit = null; S().ui.nameWarn = false; PL.openSheet('attr', { id: d.id }); };
-  A.attrNav = d => { S().ui.attrEdit = null; S().sheet.id = d.id; };
+  function suggestions() {
+    const s = S();
+    const out = [];
+    if (!s.attrs.some(a => a.id === 'hon' || a.merged)) out.push({ id: 'hon', name: D.RECOMMENDED.name, why: D.RECOMMENDED.why });
+    D.OTHER_SUGGESTIONS.filter(o => !s.attrs.some(a => a.id === o.id)).forEach(o => out.push(o));
+    return out;
+  }
+  A.moveAttr = d => { const a = S().attrs, i = a.findIndex(x => x.id === d.id), j = i + Number(d.d); if (j < 0 || j >= a.length) return; PL.move(a, i, j); S().newAttrId = null; };
+  A.openAttr = d => { S().ui.nameWarn = false; PL.openSheet('attr', { id: d.id }); };
+  A.openAttrEv = d => { S().ui.nameWarn = false; PL.openSheet('attr', { id: d.id, ev: true }); };
+  A.attrNav = d => { S().sheet.id = d.id; S().sheet.ev = false; };
 
+  /* Details: every line edits in place and saves as you type. */
+  const autoRows = t => Math.max(1, Math.ceil((t || '').length / 38));
   SHEETS.attr = sh => {
     const s = S(), a = PL.attr(sh.id);
     if (!a) return { title: 'Attribute', body: '' };
     const i = s.attrs.indexOf(a), n = s.attrs.length;
     const prev = s.attrs[i - 1], next = s.attrs[i + 1];
-    if (s.ui.attrEdit === a.id) {
-      return {
-        title: `Edit ${esc(a.name)}`, tall: true,
-        body: `${s.ui.nameWarn ? `<div class="flag" style="margin-bottom:12px"><div><b>That name reads like an experience.</b> Attributes are properties of the person. Add it as a must-have on the Requirements step instead.</div></div>` : ''}
-          <label class="field-label">Name</label><input class="field" id="ae-name" value="${esc(a.name)}">
-          <label class="field-label" style="margin-top:12px">Definition</label><textarea class="field" id="ae-def" rows="3">${esc(a.def)}</textarea>
-          <label class="field-label" style="margin-top:12px">Why it matters</label><textarea class="field" id="ae-why" rows="3">${esc(a.why)}</textarea>
-          <label class="field-label" style="margin-top:12px">Strong evidence, one per line</label><textarea class="field" id="ae-strong" rows="4">${esc(a.strong.join('\n'))}</textarea>
-          <label class="field-label" style="margin-top:12px">Weak evidence, one per line</label><textarea class="field" id="ae-weak" rows="3">${esc(a.weak.join('\n'))}</textarea>
-          <button class="textlink danger" style="margin-top:18px" data-a="removeAttr" data-id="${a.id}">Remove attribute</button>`,
-        foot: `<div class="row"><button class="btn btn-secondary" data-a="attrCancel">Cancel</button><button class="btn btn-primary" data-a="attrSave" data-id="${a.id}">Save</button></div>`
-      };
-    }
+    const evList = key => `${a[key].map((x, k) => `<div class="ev-line"><span class="dotl ${key}"></span><textarea class="inl" rows="${autoRows(x)}" data-i="attrEv" data-id="${a.id}" data-k="${key}" data-idx="${k}">${esc(x)}</textarea></div>`).join('')}
+      <button class="textlink" data-a="evAddLine" data-id="${a.id}" data-k="${key}">Add a line</button>`;
     return {
-      title: esc(a.name), sub: `Ranked #${i + 1} of ${n}${a.suggested ? ' · Suggested' : ''}`,
+      title: `#${i + 1} of ${n}`, sub: a.suggested ? 'Suggested · tap any line to edit' : 'Tap any line to edit',
       swipePrev: prev ? `attrNav:${prev.id}` : '', swipeNext: next ? `attrNav:${next.id}` : '',
-      body: `<div class="sec" style="margin-top:0">Evidence we’ll look for</div>
-        <div class="ev-h">Strong</div><ul class="ev-list">${a.strong.map(x => `<li>${esc(x)}</li>`).join('')}</ul>
-        <div class="ev-h">Weak</div><ul class="ev-list weak">${a.weak.map(x => `<li>${esc(x)}</li>`).join('')}</ul>`,
-      foot: `<div class="sheet-nav"><button data-a="attrNav" data-id="${prev ? prev.id : ''}" ${prev ? '' : 'disabled'}>${prev ? `Previous: ${esc(prev.name)}` : 'Previous'}</button><button data-a="attrNav" data-id="${next ? next.id : ''}" ${next ? '' : 'disabled'}>${next ? `Next: ${esc(next.name)}` : 'Next'}</button></div>
-        <div class="row"><button class="btn btn-secondary" data-a="attrEdit" data-id="${a.id}">Edit</button><button class="btn btn-primary" data-a="closeSheet">Done</button></div>`
+      body: `<input class="inl inl-title" data-i="attrField" data-id="${a.id}" data-k="name" value="${esc(a.name)}" aria-label="Name">
+        ${s.ui.nameWarn ? `<div class="flag" style="margin:6px 0 4px"><div>That reads like an experience. Attributes are properties of the person; experiences belong in must-haves.</div></div>` : ''}
+        <div class="lbl">Definition</div><textarea class="inl" rows="${autoRows(a.def)}" data-i="attrField" data-id="${a.id}" data-k="def">${esc(a.def)}</textarea>
+        <div class="lbl">Why it matters</div><textarea class="inl" rows="${autoRows(a.why)}" data-i="attrField" data-id="${a.id}" data-k="why">${esc(a.why)}</textarea>
+        <div id="ev-section" class="${sh.ev ? 'hl-soft hl' : ''}"><div class="sec">What we’ll look for</div>
+          <div class="lbl">Strong</div>${evList('strong')}
+          <div class="lbl" style="margin-top:12px">Weak</div>${evList('weak')}</div>
+        <button class="textlink danger" style="margin-top:20px" data-a="removeAttr" data-id="${a.id}">Remove attribute</button>`,
+      foot: `<div class="sheet-nav"><button data-a="attrNav" data-id="${prev ? prev.id : ''}" ${prev ? '' : 'disabled'}>${prev ? `Previous: ${esc(prev.name)}` : 'Previous'}</button><button data-a="attrNav" data-id="${next ? next.id : ''}" ${next ? '' : 'disabled'}>${next ? `Next: ${esc(next.name)}` : 'Next'}</button></div>`
     };
   };
-  A.attrEdit = d => { S().ui.attrEdit = d.id; S().ui.nameWarn = false; };
-  A.attrCancel = () => { S().ui.attrEdit = null; S().ui.nameWarn = false; };
-  A.attrSave = d => {
-    const a = PL.attr(d.id), v = id => { const el = document.getElementById(id); return el ? el.value : ''; };
-    const name = v('ae-name').trim();
-    if (D.EXPERIENCE_WORDS.test(name)) { S().ui.nameWarn = true; return; }
-    const next = { name: name || a.name, def: v('ae-def').trim() || a.def, why: v('ae-why').trim() || a.why,
-      strong: v('ae-strong').split('\n').map(x => x.trim()).filter(Boolean), weak: v('ae-weak').split('\n').map(x => x.trim()).filter(Boolean) };
-    const changed = ['name', 'def', 'why'].some(k => next[k] !== a[k]) || next.strong.join() !== a.strong.join() || next.weak.join() !== a.weak.join();
-    Object.assign(a, next);
-    if (changed) { a.yourWords = true; a.suggested = false; }
-    S().ui.attrEdit = null;
-    PL.toast(changed ? 'Saved' : 'No changes');
+  const markEdited = a => { if (!a.yourWords) { a.yourWords = true; a.suggested = false; } };
+  I.attrField = (v, d) => {
+    const a = PL.attr(d.id); if (!a) return;
+    if (d.k === 'name') { const warn = D.EXPERIENCE_WORDS.test(v); if (warn !== !!S().ui.nameWarn) { S().ui.nameWarn = warn; } if (!v.trim()) return; }
+    a[d.k] = v; markEdited(a);
   };
+  I.attrEv = (v, d) => { const a = PL.attr(d.id); if (!a) return; a[d.k][Number(d.idx)] = v; markEdited(a); };
+  A.evAddLine = d => { const a = PL.attr(d.id); a[d.k].push(''); markEdited(a); setTimeout(() => { const els = document.querySelectorAll(`[data-i="attrEv"][data-k="${d.k}"]`); const el = els[els.length - 1]; if (el) el.focus(); }, 30); };
+  PL.SHEET_CLOSE.attr = sh => { const a = PL.attr(sh.id); if (a) { a.strong = a.strong.filter(x => x.trim()); a.weak = a.weak.filter(x => x.trim()); } S().ui.nameWarn = false; };
   A.removeAttr = d => {
     const s = S(), i = s.attrs.findIndex(a => a.id === d.id), a = s.attrs[i];
-    s.attrs.splice(i, 1); s.ui.attrEdit = null; PL.S.sheet = null;
+    s.attrs.splice(i, 1); PL.S.sheet = null;
     PL.toast(`Removed ${esc(a.name)}`, 'attrRemove', { i, a });
   };
   PL.UNDO.attrRemove = x => { S().attrs.splice(x.i, 0, x.a); };
 
-  /* Add attribute */
+  /* Add attribute: suggestions, library search and write-your-own in one place */
   function libAttr(id) {
     const lib = D.LIBRARY.find(x => x.id === id) || D.OTHER_SUGGESTIONS.find(x => x.id === id);
     const pool = D.EVIDENCE_POOLS[id];
     return { id: lib.id, name: lib.name, def: lib.def, why: lib.why, strong: (lib.strong || (pool ? pool.S : ['Evidence drafted from your JD'])).slice(), weak: (lib.weak || ['Claims it without examples']).slice(), suggested: true };
   }
-  A.addRec = () => PL.startPlace('hon');
-  A.addOther = d => PL.startPlace(d.id);
   A.openAddAttr = () => { S().ui.addQuery = ''; S().ui.addWarn = false; PL.openSheet('addAttr'); };
   I.addQuery = v => {
     S().ui.addQuery = v; S().ui.addWarn = false;
@@ -190,15 +178,18 @@
   };
   SHEETS.addAttr = () => {
     const s = S(), q = s.ui.addQuery.trim(), ql = q.toLowerCase();
-    const items = D.LIBRARY.filter(l => !s.attrs.some(a => a.id === l.id)).filter(l => !ql || l.name.toLowerCase().includes(ql));
+    const sugg = suggestions();
+    const items = D.LIBRARY.filter(l => !s.attrs.some(a => a.id === l.id) && !sugg.some(x => x.id === l.id)).filter(l => !ql || l.name.toLowerCase().includes(ql));
     const exact = D.LIBRARY.some(l => l.name.toLowerCase() === ql);
     return {
       title: 'Add an attribute', tall: true,
-      body: `<input class="field" id="add-q" data-i="addQuery" value="${esc(q)}" placeholder="Search, or type your own" autocomplete="off" data-enter="addCustom">
+      body: `${!q && sugg.length ? `<div class="sec" style="margin-top:0">Suggested for this role</div>
+          <div class="group">${sugg.map(o => `<div class="li"><div class="b"><div class="t1">${esc(o.name)}</div><div class="t2">${esc(o.why)}</div></div><button class="btn btn-xs btn-secondary" data-a="pickLib" data-id="${o.id}">Add</button></div>`).join('')}</div>` : ''}
+        <div class="sec" style="${!q && sugg.length ? '' : 'margin-top:0'}">Search the library or write your own</div>
+        <input class="field" id="add-q" data-i="addQuery" value="${esc(q)}" placeholder="e.g. resilience, or your own" autocomplete="off" data-enter="addCustom">
         ${s.ui.addWarn ? `<div class="flag" style="margin-top:12px"><div><b>“${esc(q)}” reads like an experience, not an attribute.</b> Attributes are properties of the person. Add it as a must-have instead?<div class="row" style="margin-top:10px"><button class="btn btn-xs btn-primary" data-a="customToReq">Add as must-have</button><button class="btn btn-xs btn-secondary" data-a="addCustomForce">Keep as attribute</button></div></div></div>` : ''}
-        <div class="sec">${q ? 'Matches' : 'From the library'}</div>
-        ${items.map(l => `<button class="lib-item" data-a="pickLib" data-id="${l.id}"><div style="flex:1">${esc(l.name)}<small>${esc(l.def)}</small></div><span class="lib-add">Add</span></button>`).join('') || '<p class="small muted">No library matches.</p>'}
-        ${q && !exact ? `<button class="lib-item" data-a="addCustom"><div style="flex:1">Add “${esc(q)}” as your own<small>Pathline drafts the definition, why and evidence for you to edit.</small></div><span class="lib-add">Add</span></button>` : ''}`
+        <div style="margin-top:8px">${items.map(l => `<div class="li"><div class="b"><div class="t1">${esc(l.name)}</div><div class="t2">${esc(l.def)}</div></div><button class="btn btn-xs btn-secondary" data-a="pickLib" data-id="${l.id}">Add</button></div>`).join('') || (q ? '' : '')}</div>
+        ${q && !exact ? `<div class="li"><div class="b"><div class="t1">“${esc(q)}”</div><div class="t2">Your own. Pathline drafts the definition, why and evidence for you to edit.</div></div><button class="btn btn-xs btn-secondary" data-a="addCustom">Add</button></div>` : ''}`
     };
   };
   A.pickLib = d => PL.startPlace(d.id);
@@ -234,7 +225,7 @@
     const ov = rec && s.attrs.some(a => a.id === 'rig');
     return {
       title: `Add ${esc(obj.name)}`,
-      body: `<div class="card" style="background:var(--accent-soft);border-color:var(--accent-soft-2);font-size:13.5px;line-height:1.5"><b>Suggested rank: #${r}</b>${rec ? ', above Empirical rigor' : ', at the end'}.<br>${esc(rec ? D.RECOMMENDED.suggestWhy : 'You can drag it anywhere in the list afterwards.')}</div>
+      body: `<div class="card" style="background:var(--accent-soft);border-color:var(--accent-soft-2);font-size:13.5px;line-height:1.5"><b>Suggested rank: #${r}</b>${rec ? ', above Empirical rigor' : ', at the end'}.<br>${esc(rec ? D.RECOMMENDED.suggestWhy : 'You can move it with the arrows afterwards.')}</div>
         <div class="card" style="margin-top:10px"><div class="row" style="margin-bottom:6px"><span class="tag-t">Suggested</span></div><div style="font-size:14px;line-height:1.45">${esc(obj.def)}</div><div class="small muted" style="margin-top:6px"><b>Why:</b> ${esc(obj.why)}</div></div>
         <div class="sec">Your list with it added</div>
         <div class="group">${list.map((a, i) => `<div class="li" ${a._new ? 'style="background:var(--accent-soft);margin:0 -14px;padding-left:14px;padding-right:14px"' : ''}><span class="attr-rank">${i + 1}</span><div class="b"><div class="t1">${esc(a.name)}</div></div></div>`).join('')}</div>
@@ -262,7 +253,7 @@
      ========================================================= */
   PL.BODY.requirements = (mode, hl) => {
     const s = S(), r = s.reqs, remote = s.jd.work === 'remote';
-    const row = (k, v, small) => `<div class="req" data-a="openReq" data-id="${k}"><div class="v">${v}${small ? `<small>${small}</small>` : ''}</div><span class="chev">${ic('chev', 'sm')}</span></div>`;
+    const row = (k, v, small) => `<div class="req" data-a="openReq" data-id="${k}"><div class="v">${v}${small ? `<small>${small}</small>` : ''}</div></div>`;
     const custom = types => r.custom.filter(c => types.includes(c.type)).map(c => row(c.id, esc(c.label), 'Added by you')).join('');
     const g = (key, title, rows) => rows ? `<div class="sec">${title}</div><div class="group ${hl === key ? 'hl' : ''}">${rows}</div>` : '';
     return `${mode === 'screen' ? `<p class="lede">Must-haves from your job description, as written. Tap one to see the original wording or adjust it.</p>` : ''}
@@ -278,7 +269,7 @@
       <button class="btn btn-sm btn-secondary" style="margin-top:14px" data-a="openAddReq">Add requirement</button>`;
   };
   SCREENS.requirements = () => ({
-    title: 'Requirements', back: 'import',
+    title: 'Requirements', back: 'import', task: 'Requirements',
     body: PL.BODY.requirements('screen'),
     footer: `<button class="btn btn-primary" data-a="go" data-r="review">Looks right</button>`
   });
@@ -314,7 +305,7 @@
       title = c ? esc(c.type) : 'Requirement';
       body = c ? `<div class="card"><div style="font-weight:600">${esc(c.label)}</div><div class="small muted" style="margin-top:4px">Added by you</div></div><button class="textlink danger" style="margin-top:16px" data-a="removeReq" data-id="${c.id}">Remove requirement</button>` : '';
     }
-    return { title, sub: 'Must-have', body, foot: `<button class="btn btn-primary" data-a="closeSheet">Done</button>` };
+    return { title, sub: 'Must-have · changes save automatically', body };
   };
   C.reqRole = v => { S().reqs.role = v; };
   C.reqYears = v => { S().reqs.minYears = Number(v); };
@@ -381,7 +372,7 @@
     const big = LAYERS.find(L => L.k === ratios[0][0]);
     const vt = { healthy: `${PL.fmtN(p.base)} people are likely to fit and be reachable: plenty for ${t}.`, tight: `${PL.fmtN(p.base)} likely fits for ${t} recommended outreaches. Workable, with little slack.`, thin: `Only ${PL.fmtN(p.base)} likely fits for ${t} recommended outreaches. Consider loosening a layer.` }[v];
     return {
-      title: 'Review & pool', back: 'requirements',
+      title: 'Review & pool', back: 'requirements', task: 'Review & pool',
       body: `<div class="card"><div style="font-weight:600;font-size:15px">When do you need them to start?</div>
           <select class="field" style="margin-top:10px" data-c="seeStart">${PL.options(startOpts, s.see.start)}</select>
           <div class="small muted" style="margin-top:8px">This sets how many people to reach out to.</div></div>
@@ -393,8 +384,8 @@
         </div>
         <div class="sec">Your talent pool, approximately</div>
         <div class="card" style="padding:4px 14px">
-          ${LAYERS.map(L => `<div class="funnel-row" data-a="openLayer" data-k="${L.k}"><span class="lbl">${esc(L.lbl())}</span><span class="bar"><i style="width:${barW(p[L.k])}%"></i></span><span class="n">${PL.fmtN(p[L.k])}</span><span class="chev">${ic('chev', 'sm')}</span></div>`).join('')}
-          <div class="funnel-row final"><span class="lbl"><b>Shortlist</b></span><span class="bar"><i style="width:${barW(t)}%"></i></span><span class="n">top ${t}</span><span></span></div>
+          ${LAYERS.map(L => `<div class="funnel-row" data-a="openLayer" data-k="${L.k}"><span class="lbl">${esc(L.lbl())}</span><span class="bar"><i style="width:${barW(p[L.k])}%"></i></span><span class="n">${PL.fmtN(p[L.k])}</span></div>`).join('')}
+          <div class="funnel-row final"><span class="lbl"><b>Shortlist</b></span><span class="bar"><i style="width:${barW(t)}%"></i></span><span class="n">top ${t}</span></div>
           <div style="padding:2px 0 10px"><button class="textlink" data-a="openWhy">Why ${t}?</button></div>
         </div>
         <div class="verdict ${v}"><div><b>${v} for a ${esc(start)} start</b><div style="margin-top:3px">${vt}</div></div></div>
@@ -438,11 +429,10 @@
         body: delta + `<p style="font-size:14px;line-height:1.5;margin:0 2px 12px">Estimated from public signals like tenure, career stage and recent job changes. The specific signals are never shown or used in outreach.</p>
           <p style="font-size:14px;line-height:1.5;margin:0 2px 12px">You can’t change who wants to move, but a later start date gives more people time to become reachable.</p>
           <div class="group hl"><div class="fld-row"><span class="k">Start date</span><div class="v"><select class="field inline" data-c="seeStart">${PL.options(startOpts, S().see.start)}</select></div></div></div>`,
-        foot: `<button class="btn btn-primary" data-a="closeSheet">Done</button>`
       };
     }
     const title = L ? esc(L.lbl()) : SCREEN_TITLES[sh.screen];
-    return { title, sub: L ? `Set in ${SCREEN_TITLES[sh.screen]}` : '', tall: sh.screen !== 'basestart', body: delta + PL.BODY[sh.screen]('sheet', sh.hl), foot: `<button class="btn btn-primary" data-a="closeSheet">Done</button>` };
+    return { title, sub: L ? `Set in ${SCREEN_TITLES[sh.screen]} · changes save automatically` : 'Changes save automatically', tall: sh.screen !== 'basestart', body: delta + PL.BODY[sh.screen]('sheet', sh.hl) };
   };
   PL.SHEET_CLOSE.screenSheet = sh => {
     if (sh.from !== 'shortlist' || !sh.crit) return;
@@ -461,18 +451,17 @@
       body: `<div class="card"><div class="small" style="line-height:1.7">Offer accepted by <b>early Nov</b>, plus notice period<br>Onsites <b>late Oct</b><br>Take-homes <b>mid Oct</b><br>Replies <b>early Oct</b><br>Outreach <b>this week</b></div></div>
         <div class="sec">Conversion assumptions</div>
         <div class="group">${steps.map(([a, b, c]) => `<div class="fld-row"><span class="k" style="width:130px">${a}</span><div class="v"><b>${b}</b><span class="small muted">${c}</span></div></div>`).join('')}</div>
-        <p class="small muted" style="margin:10px 2px">${t} × 40% × 60% × 70% × 60% × 50% × 80% ≈ 1 hire. These are assumptions until your own conversions replace them.</p>`,
-      foot: `<button class="btn btn-primary" data-a="closeSheet">Got it</button>`
+        <p class="small muted" style="margin:10px 2px">${t} × 40% × 60% × 70% × 60% × 50% × 80% ≈ 1 hire. These are assumptions until your own conversions replace them.</p>`
     };
   };
 
   /* =========================================================
      4 · Shortlist
      ========================================================= */
-  function candCard(c) {
+  function candCard(c, i) {
     const exc = PL.attr(c.exc) || D.ATTRS.find(a => a.id === c.exc);
     return `<div class="cand tapcard" data-a="openCand" data-id="${c.id}">
-      <div class="cand-top">${PL.avatar(c)}<div style="flex:1;min-width:0"><div class="cand-name">${esc(c.name)} · ${esc(c.title)}</div><div class="cand-sub">${esc(c.co)} · ${esc(c.loc)}</div></div><span class="chev">${ic('chev', 'sm')}</span></div>
+      <div class="cand-top"><span class="pos">${i + 1}</span>${PL.avatar(c)}<div style="flex:1;min-width:0"><div class="cand-name">${esc(c.name)} · ${esc(c.title)}</div><div class="cand-sub">${esc(c.co)} · ${esc(c.loc)}</div></div></div>
       <div class="exc">Exceptional at <b>${esc(exc ? exc.name : c.exc)}</b></div>
       <div class="why"><b>Why a great fit:</b> ${esc(c.why)}</div>
       <div class="cline"><span class="k">Must-haves</span>${esc(PL.mustLine(c))}</div>
@@ -484,15 +473,16 @@
     const s = S(), vis = PL.visible(), t = PL.target();
     const heading = vis.length < t ? `${vis.length} people match. Loosen a must-have to reach ${t}.` : `${vis.length} people for your ${esc(PL.titleText())} role`;
     return {
-      title: 'Shortlist', back: 'review',
+      title: 'Shortlist', back: 'review', task: 'Shortlist',
       body: `<div class="crit">
           <button class="chip sm" data-a="openScreenSheet" data-s="attributes">Attributes</button>
           <button class="chip sm" data-a="openScreenSheet" data-s="requirements">Must-haves</button>
           <button class="chip sm" data-a="openScreenSheet" data-s="basestart">Base & start date</button>
         </div>
         <div class="sl-title">${heading}</div>
+        <div class="sl-sub">Ranked by fit, best match first</div>
         ${vis.map(candCard).join('')}`,
-      footer: `<button class="btn btn-primary" data-a="openContinue" ${vis.length ? '' : 'disabled'}>Continue to outreach with ${vis.length}</button>`
+      footer: `<button class="btn btn-primary" data-a="confirmOutreach" ${vis.length ? '' : 'disabled'}>Continue to outreach with ${vis.length}</button>`
     };
   };
   A.openPass = d => { S().ui.passReasons = []; PL.openSheet('pass', { id: d.id }); };
@@ -521,27 +511,14 @@
     const prev = vis[i - 1], next = vis[i + 1];
     const blocks = s.attrs.map((a, k) => { const lv = PL.level(c, a.id); return `<div class="ev-block"><div class="hd"><span class="r">${k + 1}</span>${esc(a.name)}<span style="flex:1"></span><span class="lv ${lv}">${PL.LV_TEXT[lv]}</span></div><ul>${PL.evidence(c, a.id).map(x => `<li>${esc(x)}</li>`).join('')}</ul></div>`; }).join('');
     return {
-      title: esc(c.name), sub: `${esc(c.title)} · ${esc(c.co)} · ${esc(c.loc)}`, tall: true,
+      title: `${i >= 0 ? `${i + 1}. ` : ''}${esc(c.name)}`, sub: `${esc(c.title)} · ${esc(c.co)} · ${esc(c.loc)}`, tall: true,
       swipePrev: prev ? `candNav:${prev.id}` : '', swipeNext: next ? `candNav:${next.id}` : '',
       body: `<div class="sec" style="margin-top:0">Evidence by attribute</div>${blocks}
         <div class="sec">Must-haves</div><p style="font-size:14px;margin:0 2px">${esc(PL.mustLine(c))}</p>`,
       foot: `<div class="sheet-nav"><button data-a="candNav" data-id="${prev ? prev.id : ''}" ${prev ? '' : 'disabled'}>Previous</button><span>${i >= 0 ? `${i + 1} of ${vis.length}` : ''}</span><button data-a="candNav" data-id="${next ? next.id : ''}" ${next ? '' : 'disabled'}>Next</button></div>
-        ${i >= 0 ? `<div class="row"><button class="btn btn-secondary" data-a="openPass" data-id="${c.id}">Pass</button><button class="btn btn-primary" data-a="closeSheet">Done</button></div>` : `<button class="btn btn-primary" data-a="closeSheet">Done</button>`}`
+        ${i >= 0 ? `<button class="btn btn-secondary" data-a="openPass" data-id="${c.id}">Pass on ${esc(c.name.split(' ')[0])}</button>` : ''}`
     };
   };
-  A.openContinue = () => PL.openSheet('continueOut');
-  SHEETS.continueOut = () => {
-    const vis = PL.visible(), counts = {};
-    vis.forEach(c => PL.unknowns(c).forEach(u => { counts[u] = (counts[u] || 0) + 1; }));
-    const asks = Object.keys(counts).sort((a, b) => counts[b] - counts[a]).map(u => `${counts[u] === vis.length ? 'everyone' : counts[u]} about ${esc(u)}`);
-    const askLine = asks.length ? `After they reply, we’ll ask ${asks.length > 1 ? asks.slice(0, -1).join(', ') + ' and ' + asks[asks.length - 1] : asks[0]}.` : 'Everyone meets your must-haves.';
-    return {
-      title: 'Shortlist ready for outreach',
-      body: `<p style="font-size:14.5px;line-height:1.55;margin:0 2px 12px">${vis.length} pre-candidates will be contacted in rank order, a few at a time.</p>
-        <p style="font-size:14px;line-height:1.55;margin:0 2px;color:var(--ink-2)">${askLine}</p>`,
-      foot: `<button class="btn btn-primary" data-a="confirmOutreach">Continue to outreach</button>`
-    };
-  };
-  A.confirmOutreach = () => { S().sl.final = PL.visible().map(c => c.id); PL.go('see'); };
+  A.confirmOutreach = () => { const ids = PL.visible().map(c => c.id); S().sl.final = ids; PL.go('see'); PL.toast(`Shortlist ready: ${ids.length} pre-candidates`); };
   PL.FILL.shortlist = () => { if (!S().sl.final) S().sl.final = PL.visible().map(c => c.id); };
 })(window.PL);

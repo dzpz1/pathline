@@ -111,23 +111,48 @@
   PL.stagesLine = () => joinAnd(PL.S.see.stages.map(s => article(s.name)));
   PL.stagesDetail = () => joinAnd(PL.S.see.stages.map(s => `${article(s.name)} (about ${s.h} hour${s.h === 1 ? '' : 's'})`));
   PL.totalHours = () => PL.S.see.stages.reduce((a, s) => a + Number(s.h || 0), 0);
-  PL.outcome1 = () => {
-    const o = (PL.S.see.success[0] || '').trim();
-    if (!o || /__/.test(o)) return '';
-    return o.charAt(0).toLowerCase() + o.slice(1).replace(/\.$/, '');
+  /* ---------- what candidates will see: placement ---------- */
+  PL.FIELDS = {
+    title: { label: 'Title', place: 'out', fixed: true, keep: true },
+    why: { label: 'Why now', place: 'out' },
+    base: { label: 'Base range', place: 'out', keep: true },
+    hm: { label: 'Hiring manager', place: 'out', fixed: true, keep: true },
+    process: { label: 'Hiring process', place: 'out' },
+    commit: { label: 'Our commitment', place: 'out' },
+    team: { label: 'Team & scope', place: 'after' },
+    equity: { label: 'Equity', place: 'after' },
+    bonus: { label: 'Bonus', place: 'after' },
+    start: { label: 'Target start', place: 'after' },
+    company: { label: 'Company', place: 'after' }
   };
+  PL.custom = id => (PL.S.see.custom || []).find(c => c.id === id);
+  PL.placeOf = k => {
+    const f = PL.FIELDS[k];
+    if (f && f.fixed) return 'out';
+    const c = PL.custom(k);
+    if (c) return c.place;
+    return PL.S.see.place[k] || (f ? f.place : 'after');
+  };
+  PL.shown = k => !PL.S.see.hidden[k];
+  PL.active = k => PL.shown(k) && PL.placeOf(k) === 'out';
+  PL.WHY_DEFAULT = {
+    'New role': 'This is a new role on the team.',
+    'Backfill': 'We’re hiring for this role after a change on the team.',
+    'Team growing': 'The team is growing, and this is one of the new roles.'
+  };
+  PL.whyText = () => { const s = PL.S.see; return s.whyType ? (s.whyLine.trim() || PL.WHY_DEFAULT[s.whyType]) : ''; };
 
   PL.SLOT_SRC = {
-    whyYou: 'Why you · from their public work', title: 'Role', base: 'Base range', stagesLine: 'Hiring process', stagesDetail: 'Hiring process',
-    totalHours: 'Hiring process', commitment: 'Our commitment', outcome1: 'What success looks like', whyNow: 'Why now', reportsTo: 'Team & scope',
-    engineers: 'Team & scope', gRevenue: 'Growth facts', gCustomers: 'Growth facts', gTeam: 'Growth facts', first: 'Candidate'
+    whyYou: 'Why you · from their public work', title: 'Role', baseLine: 'Base range', processLine: 'Hiring process and commitment',
+    processDetail: 'Hiring process and commitment', whyNow: 'Why now', teamLine: 'Team & scope', extras: 'Extra details you chose to share',
+    gRevenue: 'Growth facts', gCustomers: 'Growth facts', gTeam: 'Growth facts', first: 'Candidate'
   };
-  PL.BLANK_LABEL = { whyNow: 'why now', reportsTo: 'reports to', engineers: '# engineers' };
-  PL.BLANK_FIELD = { whyNow: 'why', reportsTo: 'team', engineers: 'team' };
-  PL.OPTIONAL = ['gRevenue', 'gCustomers', 'gTeam', 'outcome1'];
+  PL.BLANK_LABEL = { whyNow: 'why now', teamLine: 'team size' };
+  PL.BLANK_FIELD = { whyNow: 'why', teamLine: 'team' };
 
+  /* '' = leave out (field hidden or shown only after reply); null = blank to fill; string = the text */
   PL.emailCtx = cand => {
-    const s = PL.S.see, f = PL.S.seq.facts;
+    const s = PL.S.see, f = PL.S.seq.facts, act = PL.active;
     const ratio = (a, b) => { const x = Number(a) / Number(b); return x >= 1.8 ? `roughly ${Math.round(x)}x` : x > 1 ? 'significantly' : ''; };
     let gCustomers = '';
     if (f.custNow && f.custShare !== 'internal') {
@@ -139,19 +164,26 @@
       gTeam = f.teamShare === 'approx' && f.teamNext ? `We plan to grow the team ${ratio(f.teamNext, f.teamNow)} this year.` :
         `We’re ${f.teamNow} people today${f.teamNext ? ` and plan to be ${f.teamNext} within a year` : ''}.`;
     }
+    const proc = act('process'), com = act('commit');
+    const processLine = proc && com ? `The process is ${PL.stagesLine()}, and we reply within ${s.commitment} hours at every step.` :
+      proc ? `The process is ${PL.stagesLine()}.` : com ? `We reply within ${s.commitment} hours at every step.` : '';
+    const processDetail = proc ? `The process is ${PL.stagesDetail()}. That’s about ${PL.totalHours()} hours of your time in total.${com ? ` We reply within ${s.commitment} hours at every step.` : ''}` :
+      com ? `We reply within ${s.commitment} hours at every step.` : '';
+    const teamLine = act('team') ? (s.engineers ? `You’d report to ${s.reportsTo || 'the hiring manager'} and work with ${s.engineers} engineers across our four teams${s.otherPMs && s.otherPMs !== '0' ? `, alongside ${s.otherPMs} other PM${s.otherPMs === '1' ? '' : 's'}` : ''}.` : null) : '';
+    const extras = [];
+    if (act('equity') && s.equity) extras.push(`equity ${s.equity} (${s.vesting})`);
+    if (act('bonus') && s.bonus) extras.push(`bonus: ${s.bonus.toLowerCase()}`);
+    if (act('start')) extras.push(`target start: ${s.start}`);
+    (s.custom || []).forEach(c => { if (act(c.id) && c.value) extras.push(`${c.label.toLowerCase()}: ${c.value}`); });
     return {
       first: cand.name.split(' ')[0],
       whyYou: cand.whyYou,
       title: PL.titleText(),
-      base: `$${s.baseMin}–${s.baseMax}k`,
-      stagesLine: PL.stagesLine(),
-      stagesDetail: PL.stagesDetail(),
-      totalHours: String(PL.totalHours()),
-      commitment: `${s.commitment} hours`,
-      outcome1: PL.outcome1(),
-      whyNow: s.whyLine || '',
-      reportsTo: s.reportsTo || '',
-      engineers: s.engineers || '',
+      baseLine: act('base') ? `Base is $${s.baseMin}–${s.baseMax}k plus early equity, based in Palo Alto.` : '',
+      processLine, processDetail,
+      whyNow: act('why') ? (PL.whyText() || null) : '',
+      teamLine,
+      extras: extras.length ? `A few more details: ${extras.join('; ')}.` : '',
       gRevenue: f.rev && f.revShare !== 'internal' ? (f.revShare === 'approx' ? `Revenue has grown more than ${f.rev} in the last 12 months.` : `Revenue has grown ${f.rev} in the last 12 months.`) : '',
       gCustomers,
       gTeam

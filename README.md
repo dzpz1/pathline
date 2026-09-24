@@ -2,7 +2,7 @@
 
 Pathline is a recruiting tool for tech companies in their scaling phase. It helps them grow the team while improving, or at least maintaining, talent density.
 
-This is a clickable prototype of the **employer side of the outbound flow**, built to requirements v1.6 (see `../pathline-employer-outbound-requirements.md`). It runs from importing a job description to scheduling onsite interviews. It's static HTML, CSS and JavaScript, with no backend, no build step and no API keys.
+This is a clickable prototype of the **employer side of the outbound flow**, built to requirements v1.17 (see `../pathline-employer-outbound-requirements.md`). It runs from importing a job description to scheduling onsite interviews. It's static HTML, CSS and JavaScript, with no backend, no build step and no API keys.
 
 ## Run it
 
@@ -18,7 +18,7 @@ To host it for free, push the repo to GitHub and turn on **GitHub Pages** (Setti
 
 ## What's in the demo
 
-You play Farah, CTO at Nectar Social, hiring a Senior PM, AI. The steps panel on the left lets you jump to any step, and "Reset demo" starts over. Progress is saved in your browser only.
+You play Farah, CTO at Nectar Social, hiring a Senior PM, AI. Inside the app, **Menu** shows what needs you and every milestone. On a laptop, the steps panel on the left also lets you jump to any step, and "Reset demo" starts over. Progress is saved in your browser only.
 
 | Milestone | Screens |
 |---|---|

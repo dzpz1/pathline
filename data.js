@@ -65,7 +65,11 @@ D.RESPONSIBILITIES = [
   'Stay informed on industry developments across AI, generative technologies, and social commerce'
 ];
 
-D.SUMMARY = 'Lead AI-powered capabilities across Nectar’s platform: generative AI, automation and data-driven systems that help brands manage social engagement, community and creator relationships.';
+D.OUTCOMES = [
+  'Ship AI workflows used weekly by __% of customers',
+  'Stand up AI quality metrics (accuracy, automation rate) that engineering trusts',
+  'Run a steady research loop with brand teams that shapes the roadmap'
+];
 
 /* ---------- Attributes ---------- */
 D.ATTRS = [
@@ -312,11 +316,11 @@ D.EMAILS = {
         '- Sit in customer calls weekly to see how social and brand teams actually work',
         '- Partner with engineering on prompting systems and model-powered features, and ship quickly',
         '- Define how we measure AI quality, like accuracy and automation impact, and make real trade-offs with it',
-        'A year from now, success looks like [[outcome1]].',
+        'Here’s what success looks like a year from now: [[outcome1]].',
         'Happy to dig into any of this if you’re curious.'],
       shorter: ['Hey [[first]],',
         'Quick look at the day to day: four engineering teams, a wide surface (listening, analytics, automations, creator workflows), and you’d own AI across it: strategy, weekly customer calls, shipping with engineering, and the quality metrics.',
-        'A year from now, success looks like [[outcome1]].',
+        'Success a year from now: [[outcome1]].',
         'Happy to share more.'],
       warmer: ['Hi [[first]],',
         'I thought it might help to paint a picture of what your days would actually look like.',
@@ -326,7 +330,7 @@ D.EMAILS = {
         '- Spend time with customers every week, seeing how social and brand teams really work',
         '- Build side by side with engineering on prompting systems and model-powered features',
         '- Define what great AI quality means for us, and hold us to it',
-        'A year from now, we’d love to be celebrating [[outcome1]], together.',
+        'A year from now, we’d love to be celebrating this together: [[outcome1]].',
         'If any of this sparks questions, I’m happy to talk it through.'] },
     { day: 7, theme: 'Why now', subject: 'Re: Senior PM, AI at Nectar Social', reveals: 'Market timing, traction, why the role is open',
       base: ['Hey [[first]],',
@@ -392,7 +396,7 @@ D.EMAILS = {
       base: ['Hey [[first]],',
         'Here’s what that growth means for this role.',
         'Today, AI touches a few of our workflows. Over the next year it needs to run through all four engineering teams: Connectors, Intelligence, Experiences and Foundations. You’d set that direction.',
-        'A year from now, success looks like [[outcome1]].',
+        'Here’s what success looks like a year from now: [[outcome1]].',
         '[[whyNow]]'] },
     { day: 12, theme: 'Growth for you', subject: 'Re: Nectar Social is scaling: Senior PM, AI', reveals: 'Team growth, early equity, people and process',
       base: ['Hey [[first]],',

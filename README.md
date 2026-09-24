@@ -2,7 +2,7 @@
 
 Pathline is a recruiting tool for tech companies in their scaling phase. It helps them grow the team while improving, or at least maintaining, talent density.
 
-This is a clickable prototype of the **employer side of the outbound flow**. It runs from importing a job description to scheduling onsite interviews. It's static HTML, CSS and JavaScript, with no backend, no build step and no API keys.
+This is a clickable prototype of the **employer side of the outbound flow**, built to requirements v1.6 (see `../pathline-employer-outbound-requirements.md`). It runs from importing a job description to scheduling onsite interviews. It's static HTML, CSS and JavaScript, with no backend, no build step and no API keys.
 
 ## Run it
 
@@ -22,8 +22,8 @@ You play Farah, CTO at Nectar Social, hiring a Senior PM, AI. The steps panel on
 
 | Milestone | Screens |
 |---|---|
-| 1 · Shortlist | Import & structure → Attributes → Requirements → What candidates will see → Review & pool → Shortlist |
-| 2 · Outreach | Email sequence (edit, revise, change all, Growth rewrite) → Start outreach |
+| 1 · Shortlist | Import & what the role needs → Requirements → Review & pool → Shortlist |
+| 2 · Outreach | What candidates will see → Email sequence (edit, revise, change all, Growth rewrite) → Start outreach |
 | 3 · Monitoring | Pace, replies, send-timing and active-count suggestions, new matches |
 | 4 · Chat & take-home | Replies → chat or take-home → gut check + transcript → graceful decline or take-home → sent |
 | 5 · Review → onsite | Take-home reviews with independent decisions → onsite list |
@@ -49,6 +49,7 @@ The job description is Nectar Social's public posting. Everything else is fictio
 
 - Inbound flow and the async fit check
 - Pinning paragraphs in emails
+- Criteria suggestions from pass patterns (future iteration: improve match rate)
 - Candidate-side screens, except where the employer's actions create them (emails, decline notes, take-home)
 - Onsite and final interview tooling beyond scheduling
 - Real AI calls, a real backend, and authentication

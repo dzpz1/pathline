@@ -1,8 +1,8 @@
 # Pathline: employer prototype
 
-Pathline is a recruiting tool for tech companies in their scaling phase. It helps them grow the team while improving, or at least maintaining, talent density.
+Pathline is an outbound candidate sourcing tool for tech companies in their scaling phase. It helps them grow the team while improving, or at least maintaining, talent density.
 
-This is a clickable prototype of the **employer side of the outbound flow**, built to requirements v1.17 (see `../pathline-employer-outbound-requirements.md`). It runs from importing a job description to scheduling onsite interviews. It's static HTML, CSS and JavaScript, with no backend, no build step and no API keys.
+This is a clickable prototype of the **employer side of the outbound flow**, built to requirements v1.48. It runs from importing a job description to scheduling onsite interviews. It's static HTML, CSS and JavaScript, with no backend, no build step and no API keys.
 
 ## Run it
 
@@ -25,7 +25,7 @@ You play Misbah, CEO & co-founder at Nectar Social, hiring a PM, AI. Inside the 
 | 1 · Shortlist | Job description → Candidate attributes → Role requirements → Shortlist |
 | 2 · Outreach | Outreach fact sheet → Email sequence (edit, revise, change all, growth rewrite) → Start outreach sheet |
 | 3 · Optimize outreach | Pace, replies by email, send-timing and active-count suggestions |
-| 4 · Chat & practical assessment | Practical assessment (the standard practical assessment). On the shortlist: reply → chat or practical assessment → gut check + transcript → graceful decline or practical assessment sent |
+| 4 · Chat & practical assessment | Practical assessment page (the standard one everyone gets). On the shortlist: reply → chat or practical assessment → gut check + transcript → graceful decline or practical assessment sent |
 | 5 · Review → onsite | On the shortlist: practical assessment review with independent decisions → onsite scheduling |
 
 After outreach starts, the shortlist shows where every person is, with one next step on each card. Milestones 4 and 5 open as sheets over it.

@@ -1,10 +1,16 @@
 # Pathline: employer prototype
 
+## ▶ [Open the live prototype: dzpz1.github.io/pathline](https://dzpz1.github.io/pathline/)
+
+**https://dzpz1.github.io/pathline/**: works on a phone or a laptop, no install or sign-in. Tap **Get started**, and use **Reset demo** to start over.
+
+---
+
 Pathline is an outbound candidate sourcing tool for tech companies in their scaling phase. It helps them grow the team while improving, or at least maintaining, talent density.
 
 This is a clickable prototype of the **employer side of the outbound flow**, built to requirements v1.48. It runs from importing a job description to scheduling onsite interviews. It's static HTML, CSS and JavaScript, with no backend, no build step and no API keys.
 
-## Run it
+## Run it locally
 
 Open `index.html` in a browser, or serve the folder:
 
@@ -14,7 +20,7 @@ python3 -m http.server 8000
 
 Then visit http://localhost:8000.
 
-To host it for free, push the repo to GitHub and turn on **GitHub Pages** (Settings → Pages → deploy from the `main` branch, root folder).
+It's hosted with **GitHub Pages** from the `main` branch (root folder) at https://dzpz1.github.io/pathline/. Pushing to `main` updates the live site.
 
 ## What's in the demo
 

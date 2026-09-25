@@ -139,7 +139,7 @@ D.REQ_QUOTES = {
   loc: 'Hybrid schedule: 4 days in office, plus 3 remote flex days per quarter (after your first 3 months)'
 };
 
-/* ---------- Company fact bank (JD + Farah's emails) ---------- */
+/* ---------- Company fact bank (JD + the hiring manager's sample emails) ---------- */
 D.FACTS = [
   'Series A from Menlo Ventures x Anthropic (Anthology Fund), GV and True Ventures; $30M+ raised',
   'Customers include OLIPOP, Oura, Figma, Unilever and e.l.f. Cosmetics',
@@ -156,7 +156,9 @@ D.INFO_SUGGESTIONS = [
   { label: 'Visa sponsorship', value: '__VISA__', src: 'From your answer on Requirements' }
 ];
 
-D.HMS = ['Farah Uraizee · CTO & Co-founder', 'Joe', 'Misbah', 'Kaan'];
+D.MAILBOXES = ['misbah@nectarsocial.com', 'farah@nectarsocial.com', 'kaan@nectarsocial.com', 'hiring@nectarsocial.com'];
+D.SEND_WINDOWS = ['Weekday mornings', 'Tue–Thu, 8–10am', 'Weekdays, 9am–5pm', 'Any time'];
+D.HMS = ['Misbah · CEO & Co-founder', 'Farah Uraizee · CTO & Co-founder', 'Joe', 'Kaan'];
 
 /* ---------- Candidates (fictional) ----------
    lv = evidence level for [tech, own, emp, rig, adapt]: S strong, M medium, U unknown */
@@ -271,7 +273,7 @@ D.NEW_MATCHES = [
 D.EVIDENCE_POOLS = {
   tech: { S: ['Shipped an LLM feature to production users', 'Set up offline evals before each model change', 'Former engineer; still reviews model outputs weekly'],
           M: ['Worked closely with ML engineers on ranking features', 'Prototypes with LLM APIs; no production launch yet'],
-          U: ['Not visible in profile; tested in the chat and take-home'] },
+          U: ['Not visible in profile; tested in the chat and practical assessment'] },
   own:  { S: ['Sole PM from idea to adoption', 'Scope grew each year before the title did', 'Recruited twice by a former manager'],
           M: ['Owned a major area inside a larger roadmap'],
           U: ['Not visible in profile'] },
@@ -283,42 +285,42 @@ D.EVIDENCE_POOLS = {
           U: ['Not visible in profile'] },
   adapt:{ S: ['Navigated a pivot and re-scoped fast', 'Shipped across very different product areas'],
           M: ['Steady growth in one product area'],
-          U: ['Not visible in profile; tested in the chat and take-home'] },
+          U: ['Not visible in profile; tested in the chat and practical assessment'] },
   hon:  { S: ['Published a candid postmortem of a failed launch'],
           M: ['Some reflective writing on what they got wrong'],
-          U: ['Rarely visible in a profile; tested in the chat and take-home'] }
+          U: ['Rarely visible in a profile; tested in the chat and practical assessment'] }
 };
 
 /* ---------- Outreach emails ---------- */
-/* Tokens are filled from "What candidates will see". A token that is empty because its field is hidden or
+/* Tokens are filled from the outreach fact sheet. A token that is empty because its field is hidden or
    shown only after a reply is left out; a paragraph that is only that token is dropped. A field that is shown
    but not filled in becomes a blank. Lines starting with "- " are list items.
    [[first]] [[whyYou]] [[title]] [[baseLine]] [[processLine]] [[processDetail]] [[whyNow]] [[teamLine]] [[extras]]
    Growth-only: [[gRevenue]] [[gCustomers]] [[gTeam]] */
 D.EMAILS = {
   base: [
-    { day: 0, theme: 'Hook', subject: 'Senior PM, AI at Nectar Social', reveals: 'Company, why you, the role, base range, process',
+    { day: 0, theme: 'Hook', subject: '[[title]] at Nectar Social', reveals: 'Company, why you, the role, base range, process',
       base: ['Hey [[first]],',
-        'I’m Farah, CTO & Co-Founder at Nectar Social. We’re the Applied AI category leader in social, and we replace a legacy SaaS player every two weeks. Customers include OLIPOP, Oura, Figma, Unilever and e.l.f. Cosmetics, and we have official data partnerships with Meta, TikTok, Reddit, LinkedIn and X.',
+        'I’m Misbah, CEO & Co-Founder at Nectar Social. We’re the Applied AI category leader in social, and we replace a legacy SaaS player every two weeks. Customers include OLIPOP, Oura, Figma, Unilever and e.l.f. Cosmetics, and we have official data partnerships with Meta, TikTok, Reddit, LinkedIn and X.',
         '[[whyYou]]',
         'We’re hiring a [[title]] to own AI across our platform, spanning intelligence, automation and creator workflows. It’s hands-on: you’d work directly with customers and engineering, decide what gets built, and ship it.',
         '[[baseLine]]',
         '[[processLine]]',
-        'Worth a conversation?', 'Farah'],
+        'Worth a conversation?', 'Misbah'],
       shorter: ['Hey [[first]],',
-        'I’m Farah, CTO & Co-Founder at Nectar Social, the Applied AI leader in social. OLIPOP, Oura, Figma and Unilever run on us.',
+        'I’m Misbah, CEO & Co-Founder at Nectar Social, the Applied AI leader in social. OLIPOP, Oura, Figma and Unilever run on us.',
         '[[whyYou]]',
         'We’re hiring a [[title]] to own AI across the platform. [[baseLine]]',
         '[[processLine]]',
-        'Worth a conversation?', 'Farah'],
+        'Worth a conversation?', 'Misbah'],
       warmer: ['Hi [[first]],',
-        'I’m Farah, CTO & Co-Founder at Nectar Social, and I wanted to reach out to you personally.',
+        'I’m Misbah, CEO & Co-Founder at Nectar Social, and I wanted to reach out to you personally.',
         '[[whyYou]]',
         'We’re the Applied AI category leader in social (brands like OLIPOP, Oura, Figma and Unilever run on us) and we’re looking for a [[title]] to shape how AI shows up across everything we build. It’s hands-on and close to customers and engineering.',
         '[[baseLine]]',
         '[[processLine]]',
-        'Would you be open to a conversation? I’d love to hear what you’re working on.', 'Farah'] },
-    { day: 3, theme: 'The role, day to day', subject: 'Re: Senior PM, AI at Nectar Social', reveals: 'Teams, product surface, what you’d own',
+        'Would you be open to a conversation? I’d love to hear what you’re working on.', 'Misbah'] },
+    { day: 3, theme: 'The role, day to day', subject: 'Re: [[title]] at Nectar Social', reveals: 'Teams, product surface, what you’d own',
       base: ['Hey [[first]],',
         'Wanted to share what this role looks like day to day.',
         'We have four engineering teams (Connectors, Intelligence, Experiences, Foundations), and the product surface is wide: social listening, earned media analytics, AI-powered automations, creator workflows, and integrations across TikTok, Instagram, Reddit and more.',
@@ -340,7 +342,7 @@ D.EMAILS = {
         '- Build side by side with engineering on prompting systems and model-powered features',
         '- Define and track the metrics that tell us our AI is working',
         'If any of this sparks questions, I’m happy to talk it through.'] },
-    { day: 7, theme: 'Why now', subject: 'Re: Senior PM, AI at Nectar Social', reveals: 'Market timing, traction, why the role is open',
+    { day: 7, theme: 'Why now', subject: 'Re: [[title]] at Nectar Social', reveals: 'Market timing, traction, why the role is open',
       base: ['Hey [[first]],',
         'Quick context on timing.',
         'Every major brand is trying to treat social as a real channel, not a content calendar. They need systems for conversations, communities, creators and commerce across platforms, and that infrastructure doesn’t exist yet.',
@@ -359,7 +361,7 @@ D.EMAILS = {
         'Brands everywhere are realizing social is their most important owned channel, and the tools haven’t caught up. That’s the gap we’re filling, and customers like Unilever, OLIPOP, Oura and Figma are already with us. We also just closed a Series A from Menlo Ventures x Anthropic (Anthology Fund), GV and True Ventures.',
         '[[whyNow]] You’d have real ownership, a direct say in strategy, and early equity with meaningful upside.',
         'If that sounds like the kind of place you’d thrive, I’d really love to connect.'] },
-    { day: 12, theme: 'People + process', subject: 'Re: Senior PM, AI at Nectar Social', reveals: 'Team, process and time cost, anything else you chose to share',
+    { day: 12, theme: 'People + process', subject: 'Re: [[title]] at Nectar Social', reveals: 'Team, process and time cost, anything else you chose to share',
       base: ['Hey [[first]],',
         'A few things people usually ask about before a first conversation.',
         '[[teamLine]]',
@@ -379,50 +381,50 @@ D.EMAILS = {
         '[[processDetail]]',
         '[[extras]]',
         'If you’d like to meet someone on the team informally first, I’d be glad to set that up.'] },
-    { day: 18, theme: 'Graceful close', subject: 'Re: Senior PM, AI at Nectar Social', reveals: 'A “later” option and a referral ask',
+    { day: 18, theme: 'Graceful close', subject: 'Re: [[title]] at Nectar Social', reveals: 'A “later” option and a referral ask',
       base: ['Hey [[first]],',
         'I’ll stop here. I know timing is often the issue. If now isn’t right, just reply “later” and I’ll check back in a few months. And if someone comes to mind who’d be great for this, I’d really appreciate an intro.',
-        'Either way, thanks for reading.', 'Farah'],
+        'Either way, thanks for reading.', 'Misbah'],
       shorter: ['Hey [[first]],',
         'Last note from me. If the timing’s off, reply “later” and I’ll check back. If someone comes to mind, an intro would mean a lot.',
-        'Thanks, Farah'],
+        'Thanks, Misbah'],
       warmer: ['Hi [[first]],',
         'This will be my last note. I really appreciate you reading this far. If the timing isn’t right, just reply “later” and I’ll gladly check back in a few months.',
         'And if someone you respect comes to mind, an intro would mean a lot.',
-        'Wishing you the best either way,', 'Farah'] }
+        'Wishing you the best either way,', 'Misbah'] }
   ],
   growth: [
-    { day: 0, theme: 'Hook: momentum', subject: 'Nectar Social is scaling: Senior PM, AI', reveals: 'Momentum up front, why you, the role, base range',
+    { day: 0, theme: 'Hook: momentum', subject: 'Nectar Social is scaling: [[title]]', reveals: 'Momentum up front, why you, the role, base range',
       base: ['Hey [[first]],',
-        'I’m Farah, CTO & Co-Founder at Nectar Social. We replace a legacy SaaS player every two weeks, and we just closed a Series A from Menlo Ventures x Anthropic (Anthology Fund), GV and True Ventures.',
+        'I’m Misbah, CEO & Co-Founder at Nectar Social. We replace a legacy SaaS player every two weeks, and we just closed a Series A from Menlo Ventures x Anthropic (Anthology Fund), GV and True Ventures.',
         '[[gRevenue]]',
         '[[whyYou]]',
         'We’re hiring a [[title]] to own AI as we scale. [[baseLine]]',
         '[[processLine]]',
-        'Worth a conversation?', 'Farah'] },
-    { day: 3, theme: 'The growth story', subject: 'Re: Nectar Social is scaling: Senior PM, AI', reveals: 'Customers, data partnerships, growth numbers you chose to share',
+        'Worth a conversation?', 'Misbah'] },
+    { day: 3, theme: 'The growth story', subject: 'Re: Nectar Social is scaling: [[title]]', reveals: 'Customers, data partnerships, growth numbers you chose to share',
       base: ['Hey [[first]],',
         'A bit more on the momentum:',
         '- Brands like OLIPOP, Oura, Figma, Unilever and e.l.f. Cosmetics run social on Nectar',
         '- Official data partnerships with Meta, TikTok, Reddit, LinkedIn and X',
         '- [[gCustomers]]',
         'Social has become the most important owned channel for brands, and the tooling hasn’t kept up. We’re building that layer, AI-native from day one.'] },
-    { day: 7, theme: 'What growth means for the role', subject: 'Re: Nectar Social is scaling: Senior PM, AI', reveals: 'Scope expanding with the company, why now',
+    { day: 7, theme: 'What growth means for the role', subject: 'Re: Nectar Social is scaling: [[title]]', reveals: 'Scope expanding with the company, why now',
       base: ['Hey [[first]],',
         'Here’s what that growth means for this role.',
         'Today, AI touches a few of our workflows. Over the next year it needs to run through all four engineering teams: Connectors, Intelligence, Experiences and Foundations. You’d set that direction.',
         '[[whyNow]]'] },
-    { day: 12, theme: 'Growth for you', subject: 'Re: Nectar Social is scaling: Senior PM, AI', reveals: 'Team growth, early equity, the people and the process',
+    { day: 12, theme: 'Growth for you', subject: 'Re: Nectar Social is scaling: [[title]]', reveals: 'Team growth, early equity, the people and the process',
       base: ['Hey [[first]],',
         '[[gTeam]]',
         'Early hires here grow with the company: early equity with meaningful upside, and scope that expands as we do.',
         '[[teamLine]]',
         '[[processDetail]]',
         '[[extras]]'] },
-    { day: 18, theme: 'Graceful close', subject: 'Re: Nectar Social is scaling: Senior PM, AI', reveals: 'A “later” option and a referral ask',
+    { day: 18, theme: 'Graceful close', subject: 'Re: Nectar Social is scaling: [[title]]', reveals: 'A “later” option and a referral ask',
       base: ['Hey [[first]],',
         'We’re moving quickly, so I’ll stop here. If now isn’t right, reply “later” and I’ll check back in a few months. And if someone comes to mind, I’d really appreciate an intro.',
-        'Thanks for reading.', 'Farah'] }
+        'Thanks for reading.', 'Misbah'] }
   ]
 };
 
@@ -434,25 +436,25 @@ D.GROWTH_PLAN = [
   'Graceful close'
 ];
 
-/* ---------- Replies, chat, take-home ---------- */
+/* ---------- Replies, chat, practical assessment ---------- */
 D.REPLIES = [
-  { id: 'c1', when: 'Oct 1', kind: 'Interested', msg: 'Hi Farah, thanks for reaching out. The eval problem at your scale is exactly what I’ve been thinking about. Happy to talk.',
+  { id: 'c1', when: 'Oct 1', by: 'Oct 3', kind: 'Interested', msg: 'Hi Misbah, thanks for reaching out. The eval problem at your scale is exactly what I’ve been thinking about. Happy to talk.',
     rec: 'chat', reasons: ['Relocation and work authorization are unknown', 'Adaptability has no evidence yet'] },
-  { id: 'c2', when: 'Oct 2', kind: 'Interested', msg: 'This sounds great. I’d love to learn more. I can do a take-home this week if that’s easiest.',
+  { id: 'c2', when: 'Oct 13, 5pm', by: 'today, 5pm', left: 10, kind: 'Interested', msg: 'This sounds great. I’d love to learn more. I can do a practical assessment this week if that’s easiest.',
     rec: 'takehome', reasons: ['Strong evidence on all top attributes', 'Must-haves all likely'] },
-  { id: 'c3', when: 'Oct 2', kind: 'Tell me more', msg: 'Curious. Can you share more about how the AI team is structured today?',
+  { id: 'c3', when: 'Oct 14, 9am', by: 'Oct 16, 9am', left: 26, kind: 'Tell me more', msg: 'Curious. Can you share more about how the AI team is structured today?',
     rec: 'chat', reasons: ['Relocation is unknown (Seattle)', 'Technical depth evidence is medium'] }
 ];
 
-D.TRANSCRIPT = `Farah: Thanks for making time, Maya. What made you reply?
+D.TRANSCRIPT = `Misbah: Thanks for making time, Maya. What made you reply?
 Maya: Honestly, the eval question. We built a judge model to score reply quality before rollout, and I'm curious how you handle quality across so many brands' voices.
-Farah: Walk me through how you rolled that out.
+Misbah: Walk me through how you rolled that out.
 Maya: We started with 50 hand-labeled conversations per brand, then let the judge model gate releases. The first version was too strict; we loosened it after it blocked a fix we needed.
-Farah: What would you do differently?
+Misbah: What would you do differently?
 Maya: Involve support leads earlier. I owned the metric, but I didn't bring them the definitions soon enough.
-Farah: Palo Alto four days a week, does that work?
+Misbah: Palo Alto four days a week, does that work?
 Maya: Yes, I'm in SF already, and I'm authorized to work in the US.
-Farah: What would you want to own in your first six months?
+Misbah: What would you want to own in your first six months?
 Maya: The quality layer for automations. Hands-on, close to customers.`;
 
 D.TAKEHOME = {
@@ -474,13 +476,13 @@ D.TAKEHOME = {
 };
 
 D.SUBMISSIONS = [
-  { id: 'c1', submitted: 'Oct 13, 7:42pm', due: 'Today, 6pm', left: 11, reviewers: { farah: null, kaan: 'advance' }, kaanNote: 'Best eval plan we’ve seen: judge model plus hand-labeled set.',
+  { id: 'c8', submitted: 'Oct 13, 7:42pm', due: 'today, 7:42pm', left: 12, reviewers: { kaan: 'advance' }, kaanNote: 'Best eval plan we’ve seen: judge model plus hand-labeled set.',
     grades: { tech: 'Strong', own: 'Strong', emp: 'Medium', rig: 'Strong', adapt: 'Strong', hon: 'Strong' }, ai: 'Meets', metrics: 'Meets',
     excerpt: { tech: '“Eval plan: a judge model plus 50 hand-labeled replies per brand, before any rollout.”', adapt: 'Cut scope cleanly at the timeline twist, and explained what and why.' } },
-  { id: 'c2', submitted: 'Oct 14, 9:05am', due: 'Oct 16, 9am', left: 35, reviewers: { farah: null, kaan: null }, kaanNote: 'Strong on metrics; prototype a bit thin.',
+  { id: 'c9', submitted: 'Oct 14, 9:05am', due: 'Oct 16, 9am', left: 26, reviewers: { kaan: null }, kaanNote: 'Strong on metrics; prototype a bit thin.',
     grades: { tech: 'Strong', own: 'Medium', emp: 'Medium', rig: 'Strong', adapt: 'Medium', hon: 'Strong' }, ai: 'Meets', metrics: 'Exceeds',
     excerpt: { rig: '“Primary metric: approved-without-edit rate, segmented by brand voice cluster.”' } },
-  { id: 'c4', submitted: 'Oct 14, 4:20pm', due: 'Oct 16, 4pm', left: 42, reviewers: { farah: null, kaan: 'reject' }, kaanNote: 'Great customer insight, thin on how the models would actually work.',
+  { id: 'c4', submitted: 'Oct 14, 4:20pm', due: 'Oct 16, 4pm', left: 33, reviewers: { kaan: 'reject' }, kaanNote: 'Great customer insight, thin on how the models would actually work.',
     grades: { tech: 'Medium', own: 'Strong', emp: 'Strong', rig: 'Medium', adapt: 'Strong', hon: 'Medium' }, ai: 'Partially meets', metrics: 'Meets',
     excerpt: { emp: 'Interviewed three social media managers before designing, and quoted them in the doc.' } }
 ];

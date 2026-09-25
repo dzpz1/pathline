@@ -5,7 +5,8 @@
   const LVV = { S: 1, M: .55, U: .2 };
   PL.LV_TEXT = { S: 'Strong', M: 'Medium', U: 'Unknown' };
 
-  PL.titleText = () => PL.S.see.title || 'Senior PM, AI';
+  PL.titleText = () => PL.S.see.title || 'PM, AI';
+  PL.subj = t => t.subject.replace('[[title]]', PL.titleText());
   PL.cand = id => D.CANDS.find(c => c.id === id) || D.NEW_MATCHES.find(c => c.id === id);
   PL.attr = id => PL.S.attrs.find(a => a.id === id);
 
@@ -18,7 +19,7 @@
   PL.evidence = (c, aid) => {
     const lv = PL.level(c, aid);
     if (aid === c.exc) return [c.why];
-    const pool = (D.EVIDENCE_POOLS[aid] || { U: ['Not visible in profile; tested in the chat and take-home'] })[lv] || ['Not visible in profile; tested in the chat and take-home'];
+    const pool = (D.EVIDENCE_POOLS[aid] || { U: ['Not visible in profile; tested in the chat and practical assessment'] })[lv] || ['Not visible in profile; tested in the chat and practical assessment'];
     const k = PL.hash(c.id + aid) % pool.length;
     const out = [pool[k]];
     if (lv === 'S' && pool.length > 1) out.push(pool[(k + 1) % pool.length]);
@@ -111,7 +112,7 @@
   PL.stagesLine = () => joinAnd(PL.S.see.stages.map(s => article(s.name)));
   PL.stagesDetail = () => joinAnd(PL.S.see.stages.map(s => `${article(s.name)} (about ${s.h} hour${s.h === 1 ? '' : 's'})`));
   PL.totalHours = () => PL.S.see.stages.reduce((a, s) => a + Number(s.h || 0), 0);
-  /* ---------- what candidates will see: placement ---------- */
+  /* ---------- outreach fact sheet: placement ---------- */
   PL.FIELDS = {
     title: { label: 'Title', place: 'out', fixed: true, keep: true },
     why: { label: 'Why now', place: 'out' },

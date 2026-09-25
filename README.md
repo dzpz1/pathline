@@ -18,15 +18,17 @@ To host it for free, push the repo to GitHub and turn on **GitHub Pages** (Setti
 
 ## What's in the demo
 
-You play Farah, CTO at Nectar Social, hiring a Senior PM, AI. Inside the app, **Menu** shows what needs you and every milestone. On a laptop, the steps panel on the left also lets you jump to any step, and "Reset demo" starts over. Progress is saved in your browser only.
+You play Misbah, CEO & co-founder at Nectar Social, hiring a PM, AI. Inside the app, **Menu** (top right) lists every place you can go: Job description, Candidate attributes, Role requirements, Shortlist, Outreach fact sheet, Email sequence, Optimize outreach and Practical assessment. Each screen shows what needs you. "Reset demo" (bottom-left on a laptop, bottom of the menu on a phone) starts over. Progress is saved in your browser only.
 
 | Milestone | Screens |
 |---|---|
-| 1 · Shortlist | Import & what the role needs → Requirements → Review & pool → Shortlist |
-| 2 · Outreach | What candidates will see → Email sequence (edit, revise, change all, Growth rewrite) → Start outreach |
-| 3 · Monitoring | Pace, replies, send-timing and active-count suggestions, new matches |
-| 4 · Chat & take-home | Replies → chat or take-home → gut check + transcript → graceful decline or take-home → sent |
-| 5 · Review → onsite | Take-home reviews with independent decisions → onsite list |
+| 1 · Shortlist | Job description → Candidate attributes → Role requirements → Shortlist |
+| 2 · Outreach | Outreach fact sheet → Email sequence (edit, revise, change all, growth rewrite) → Start outreach sheet |
+| 3 · Optimize outreach | Pace, replies by email, send-timing and active-count suggestions |
+| 4 · Chat & practical assessment | Practical assessment (the standard practical assessment). On the shortlist: reply → chat or practical assessment → gut check + transcript → graceful decline or practical assessment sent |
+| 5 · Review → onsite | On the shortlist: practical assessment review with independent decisions → onsite scheduling |
+
+After outreach starts, the shortlist shows where every person is, with one next step on each card. Milestones 4 and 5 open as sheets over it.
 
 ## Demo data
 
@@ -36,9 +38,9 @@ The job description is Nectar Social's public posting. Everything else is fictio
 
 | File | Contents |
 |---|---|
-| `index.html` | Page shell: phone frame, side panels |
+| `index.html` | Page shell: phone frame and a Reset demo link |
 | `styles.css` | All styles |
-| `data.js` | The JD, attributes, candidates, emails, take-home and submissions |
+| `data.js` | The JD, attributes, candidates, emails, practical assessment and submissions |
 | `core.js` | State, rendering, bottom sheets, navigation, events |
 | `model.js` | Pool sizing, ranking, evidence, projections, email context |
 | `m1.js` | Milestone 1 screens |
@@ -50,6 +52,6 @@ The job description is Nectar Social's public posting. Everything else is fictio
 - Inbound flow and the async fit check
 - Pinning paragraphs in emails
 - Criteria suggestions from pass patterns (future iteration: improve match rate)
-- Candidate-side screens, except where the employer's actions create them (emails, decline notes, take-home)
+- Candidate-side screens, except where the employer's actions create them (emails, decline notes, practical assessment)
 - Onsite and final interview tooling beyond scheduling
 - Real AI calls, a real backend, and authentication

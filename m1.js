@@ -9,8 +9,8 @@
      ========================================================= */
   SCREENS.start = () => ({
     noBar: true,
-    body: `<div class="splash"><div class="splash-mark"><i></i></div><div class="splash-name">Pathline</div><div class="splash-tag">Every hire raises the bar.</div></div>`,
-    footer: `<button class="btn btn-primary" data-a="go" data-r="import">Get started</button>`
+    body: `<div class="splash"><div class="splash-mark"><i></i></div><div class="splash-name">Pathline</div><div class="splash-what">Outbound candidate sourcing</div><div class="splash-tag">Every hire raises the bar.</div></div>`,
+    footer: `<button class="btn btn-primary" data-a="go" data-r="jd">Get started</button>`
   });
 
   /* =========================================================
@@ -18,57 +18,60 @@
      ========================================================= */
   const PARSE_STEPS = ['Reading the posting', 'Understanding the role', 'Drafting what the role needs', 'Checking for conflicts'];
   const isUrl = v => /^\s*https?:\/\/\S+\s*$/i.test(v);
-  const detectText = v => { if (!v.trim()) return ''; if (isUrl(v)) { try { return `Link · ${new URL(v.trim()).hostname}`; } catch (e) { return 'Link'; } } return v.trim().length > 40 ? 'Job description text' : ''; };
+  const roleFound = v => v.trim() === D.JD_URL ? `<div class="rf-t">Product Manager, AI</div><div class="rf-s">Nectar Social · Palo Alto, CA · Full time</div>` : '';
+  const detectText = v => { if (!v.trim() || v.trim() === D.JD_URL) return ''; if (isUrl(v)) { try { return `Link · ${new URL(v.trim()).hostname}`; } catch (e) { return 'Link'; } } return v.trim().length > 40 ? 'Job description text' : ''; };
 
   function roleCard() {
     const s = S(), title = s.see.title, work = s.jd.work;
     const qs = [];
     if (!title) qs.push(`<div class="q"><div class="qt">Your posting says both “Product Manager” and “Senior Product Manager”. Which level?</div><div class="chips">${PL.chip('PM, AI', false, 'setTitle', 'data-v="PM, AI"')}${PL.chip('Senior PM, AI', false, 'setTitle', 'data-v="Senior PM, AI"')}</div></div>`);
-    if (!work) qs.push(`<div class="q"><div class="qt">It’s listed as remote, but the text says 4 days in the office. Which is right?</div><div class="chips">${PL.chip('Remote', false, 'setWork', 'data-v="remote"')}${PL.chip('Hybrid, 4 days', false, 'setWork', 'data-v="hybrid"')}</div></div>`);
     const facts = [];
-    if (title) facts.push(`Level: ${esc(title)}`);
-    if (work) facts.push(`Work model: ${work === 'remote' ? 'remote' : 'hybrid, 4 days in office'}`);
+    facts.push(`Work model: ${work === 'remote' ? 'remote' : 'hybrid, 4 days in office'}`);
     return { html: `<div class="role-card"><div class="role-title">${esc(title || 'Product Manager, AI')}</div><div class="role-meta">Nectar Social · Palo Alto, CA · Full time</div>
       ${facts.length ? `<div class="role-line">${facts.join(' · ')}</div>` : ''}${qs.join('')}</div>`, open: qs.length };
   }
-  SCREENS.import = () => {
+  SCREENS.jd = () => {
     const j = S().jd;
     if (j.parsing) {
-      return { title: 'New role', back: 'start', body: `<div class="parse"><div class="spin"></div><div class="parse-steps">${PARSE_STEPS.map((t, i) =>
+      return { title: 'Job description', back: 'start', task: 'Job description', body: `<div class="parse"><div class="spin"></div><div class="parse-steps">${PARSE_STEPS.map((t, i) =>
         `<div class="${i <= j.parseStep ? 'on' : ''}"><span class="tick">${i < j.parseStep ? '✓' : ''}</span>${t}</div>`).join('')}</div></div>` };
     }
-    if (!j.imported) {
-      return {
-        title: 'New role', back: 'start',
-        task: 'What the role needs',
+    return {
+        title: 'Job description', back: 'start',
+        task: 'Job description',
         body: `<div class="intro">In about 10 minutes, you’ll have a shortlist of people to reach out to.</div>
           <div class="h1">What’s the role?</div>
           <textarea class="field jd-in" data-i="jdInput" rows="4" placeholder="Paste a job description or a link" aria-label="Job description or link">${esc(j.input)}</textarea>
-          <div class="detect" id="jd-detect">${S().ui.listening === 'jd' ? 'Listening…' : esc(detectText(j.input))}</div>
-          <button class="textlink" data-a="openOtherWays">Other ways to add it</button>`,
-        footer: `<button class="btn btn-primary" data-a="importJD" ${j.input.trim() ? '' : 'disabled'}>Import</button>`
+          <div class="field-tools">${PL.micBtn('jd')}<button class="tool" data-a="protoOnly" aria-label="Upload a file">${ic('upload')}</button><span class="detect" id="jd-detect">${S().ui.listening === 'jd' ? '<span class="listening">Listening…</span>' : esc(detectText(j.input))}</span></div>
+          <div class="role-found ${j.input.trim() === D.JD_URL ? 'on' : ''}" id="role-found">${roleFound(j.input)}</div>`,
+        footer: `<button class="btn btn-primary" data-a="importJD" ${j.input.trim() ? '' : 'disabled'}>Next</button>`
       };
-    }
-    const rc = roleCard();
+  };
+  SCREENS.import = () => {
+    const j = S().jd, rc = roleCard();
     return {
-      title: 'What the role needs', back: 'start', task: 'What the role needs',
+      title: 'Candidate attributes', back: 'jd', task: 'Candidate attributes',
       body: `<div class="src-line">From ${esc(j.source)} · <button class="textlink" data-a="jdChange">Change</button></div>
         ${rc.html}
         <div class="sec">What the role needs</div>
         ${PL.BODY.attributes('screen')}`,
-      footer: `<button class="btn btn-primary" data-a="go" data-r="requirements" ${rc.open ? 'disabled' : ''}>${rc.open ? `Answer the ${rc.open === 1 ? 'question' : `${rc.open} questions`} above` : 'Looks right'}</button>`
+      footer: `<button class="btn btn-primary" data-a="go" data-r="review" ${rc.open ? 'disabled' : ''}>${rc.open ? `Answer the ${rc.open === 1 ? 'question' : `${rc.open} questions`} above` : 'Looks right'}</button>`
     };
   };
-  I.jdInput = v => { S().jd.input = v; const d = document.getElementById('jd-detect'); if (d) d.textContent = detectText(v); PL.liveFooter(); };
-  A.openOtherWays = () => PL.openSheet('otherWays');
-  SHEETS.otherWays = () => ({
-    title: 'Other ways to add it',
-    body: `<div class="group">
-      <div class="frow" data-a="protoOnly"><span class="k" style="width:auto;flex:1;color:var(--ink);font-size:14.5px">Upload a file</span><span class="v small muted" style="flex:none">PDF or DOCX</span></div>
-      <div class="frow" data-a="talkJD"><span class="k" style="width:auto;flex:1;color:var(--ink);font-size:14.5px">Talk it through</span><span class="v small muted" style="flex:none">about 2 minutes</span></div></div>`
+  /* Demo: whatever is typed or pasted becomes Nectar's posting link. Deleting still works. */
+  /* Demo: tapping the box at all fills in Nectar's posting link */
+  document.addEventListener('focusin', e => {
+    const el = e.target;
+    if (!el.classList || !el.classList.contains('jd-in') || el.value === D.JD_URL) return;
+    el.value = D.JD_URL; I.jdInput(D.JD_URL, el.dataset, el); PL.save();
   });
-  A.protoOnly = () => { PL.S.sheet = null; PL.toast('In this prototype, paste a link or the text'); };
-  A.talkJD = () => { PL.S.sheet = null; A.talk({ t: 'jd' }); };
+  I.jdInput = (v, d, el) => {
+    if (v && !D.JD_URL.startsWith(v)) { v = D.JD_URL; if (el) { el.value = v; el.setSelectionRange(v.length, v.length); } }
+    S().jd.input = v; const det = document.getElementById('jd-detect'); if (det) det.textContent = detectText(v);
+    const rf = document.getElementById('role-found'); if (rf) { rf.innerHTML = roleFound(v); rf.classList.toggle('on', !!roleFound(v)); }
+    PL.liveFooter();
+  };
+  A.protoOnly = () => { PL.S.sheet = null; PL.toast('In this prototype, paste a link or the text, or use the microphone'); };
   PL.VOICE.jd = 'We’re hiring a senior product manager for AI at Nectar Social, in Palo Alto, four days a week in the office. They’d own our AI features end to end, work with engineering on prompting and model-powered features, talk to brand and social teams every week, and own the metrics. Five-plus years as a PM, strong with data, and experience or real interest in generative AI.';
   PL.VOICE_APPLY = PL.VOICE_APPLY || {};
   PL.VOICE_APPLY.jd = text => { S().jd.input = text; };
@@ -79,18 +82,18 @@
     const tick = () => {
       if (!PL.S.jd.parsing) return;
       if (PL.S.jd.parseStep < PARSE_STEPS.length - 1) { PL.S.jd.parseStep++; PL.render(); setTimeout(tick, 450); }
-      else { PL.S.jd.parsing = false; PL.S.jd.imported = true; PL.save(); PL.render(); }
+      else { PL.S.jd.parsing = false; PL.S.jd.imported = true; if (!PL.S.see.title) PL.S.see.title = 'PM, AI'; PL.go('import'); PL.save(); PL.render(); }
     };
     setTimeout(tick, 450);
   };
-  A.jdChange = () => { S().jd.imported = false; };
+  A.jdChange = () => PL.go('jd');
   A.setTitle = d => { S().see.title = d.v; };
   A.setWork = d => { S().jd.work = d.v; };
-  PL.FILL.import = () => {
+  PL.FILL.jd = () => {
     const s = S();
-    s.jd.imported = true; s.jd.parsing = false;
+    s.jd.imported = true; s.jd.parsing = false; if (!s.jd.input) s.jd.input = D.JD_URL;
     if (!s.jd.source) s.jd.source = 'jobs.ashbyhq.com';
-    if (!s.see.title) s.see.title = 'Senior PM, AI';
+    if (!s.see.title) s.see.title = 'PM, AI';
     if (!s.jd.work) s.jd.work = 'hybrid';
   };
 
@@ -107,8 +110,7 @@
   PL.BODY.attributes = () => {
     const s = S();
     const sugg = suggestions().length;
-    return `<p class="sort-hint">Ranked by impact over the next 12–18 months. Use the arrows to re-rank.</p>
-      <div class="attr-list">${s.attrs.map(attrCard).join('')}</div>
+    return `<div class="attr-list">${s.attrs.map(attrCard).join('')}</div>
       ${s.attrs.length >= 8 ? `<p class="small muted" style="margin:10px 2px 0">Each extra attribute lowers the weight of the others.</p>` : ''}
       <div class="add-row" data-a="openAddAttr"><div class="t1">Add attribute</div><div class="t2">${sugg ? `${sugg} suggestion${sugg > 1 ? 's' : ''} for this role, or search the library` : 'Search the library, or write your own'}</div></div>`;
   };
@@ -131,19 +133,19 @@
     if (!a) return { title: 'Attribute', body: '' };
     const i = s.attrs.indexOf(a), n = s.attrs.length;
     const prev = s.attrs[i - 1], next = s.attrs[i + 1];
-    const evList = key => `${a[key].map((x, k) => `<div class="ev-line"><span class="dotl ${key}"></span><textarea class="inl" rows="${autoRows(x)}" data-i="attrEv" data-id="${a.id}" data-k="${key}" data-idx="${k}">${esc(x)}</textarea></div>`).join('')}
-      <button class="textlink" data-a="evAddLine" data-id="${a.id}" data-k="${key}">Add a line</button>`;
+    const evCard = (key, title, hint) => `<div class="ev-card ${key}"><div class="ev-head"><span class="ev-tag ${key}">${title}</span><span class="ev-hint">${hint}</span></div>
+      ${a[key].map((x, k) => `<div class="ev-row"><span class="dotl ${key}"></span><textarea class="inl ev-in" rows="${autoRows(x)}" data-i="attrEv" data-id="${a.id}" data-k="${key}" data-idx="${k}" aria-label="${title} evidence ${k + 1}">${esc(x)}</textarea></div>`).join('')}
+      <button class="ev-add" data-a="evAddLine" data-id="${a.id}" data-k="${key}">Add a line</button></div>`;
     return {
       title: `#${i + 1} of ${n}`, sub: a.suggested ? 'Suggested · tap any line to edit' : 'Tap any line to edit',
       swipePrev: prev ? `attrNav:${prev.id}` : '', swipeNext: next ? `attrNav:${next.id}` : '',
-      body: `<input class="inl inl-title" data-i="attrField" data-id="${a.id}" data-k="name" value="${esc(a.name)}" aria-label="Name">
+      body: `<div class="title-row"><input class="inl inl-title" data-i="attrField" data-id="${a.id}" data-k="name" value="${esc(a.name)}" aria-label="Name"><button class="textlink danger" data-a="removeAttr" data-id="${a.id}" aria-label="Remove ${esc(a.name)}">Remove</button></div>
         ${s.ui.nameWarn ? `<div class="flag" style="margin:6px 0 4px"><div>That reads like an experience. Attributes are properties of the person; experiences belong in must-haves.</div></div>` : ''}
-        <div class="lbl">Definition</div><textarea class="inl" rows="${autoRows(a.def)}" data-i="attrField" data-id="${a.id}" data-k="def">${esc(a.def)}</textarea>
-        <div class="lbl">Why it matters</div><textarea class="inl" rows="${autoRows(a.why)}" data-i="attrField" data-id="${a.id}" data-k="why">${esc(a.why)}</textarea>
-        <div id="ev-section" class="${sh.ev ? 'hl-soft hl' : ''}"><div class="sec">What we’ll look for</div>
-          <div class="lbl">Strong</div>${evList('strong')}
-          <div class="lbl" style="margin-top:12px">Weak</div>${evList('weak')}</div>
-        <button class="textlink danger" style="margin-top:20px" data-a="removeAttr" data-id="${a.id}">Remove attribute</button>`,
+        <div class="dcard"><div class="dlbl">Definition</div><textarea class="inl" rows="${autoRows(a.def)}" data-i="attrField" data-id="${a.id}" data-k="def">${esc(a.def)}</textarea></div>
+        <div class="dcard"><div class="dlbl">Why it matters</div><textarea class="inl" rows="${autoRows(a.why)}" data-i="attrField" data-id="${a.id}" data-k="why">${esc(a.why)}</textarea></div>
+        <div id="ev-section" class="${sh.ev ? 'hl-soft hl' : ''}"><div class="dsec-h">What we’ll look for</div>
+          ${evCard('strong', 'Strong', 'counts toward this attribute')}
+          ${evCard('weak', 'Weak', 'doesn’t count on its own')}</div>`,
       foot: `<div class="sheet-nav"><button data-a="attrNav" data-id="${prev ? prev.id : ''}" ${prev ? '' : 'disabled'}>${prev ? `Previous: ${esc(prev.name)}` : 'Previous'}</button><button data-a="attrNav" data-id="${next ? next.id : ''}" ${next ? '' : 'disabled'}>${next ? `Next: ${esc(next.name)}` : 'Next'}</button></div>`
     };
   };
@@ -225,7 +227,7 @@
     const ov = rec && s.attrs.some(a => a.id === 'rig');
     return {
       title: `Add ${esc(obj.name)}`,
-      body: `<div class="card" style="background:var(--accent-soft);border-color:var(--accent-soft-2);font-size:13.5px;line-height:1.5"><b>Suggested rank: #${r}</b>${rec ? ', above Empirical rigor' : ', at the end'}.<br>${esc(rec ? D.RECOMMENDED.suggestWhy : 'You can move it with the arrows afterwards.')}</div>
+      body: `<div class="card" style="background:var(--accent-soft);border-color:var(--accent-soft-2);font-size:14px;line-height:1.5"><b>Suggested rank: #${r}</b>${rec ? ', above Empirical rigor' : ', at the end'}.<br>${esc(rec ? D.RECOMMENDED.suggestWhy : 'You can move it with the arrows afterwards.')}</div>
         <div class="card" style="margin-top:10px"><div class="row" style="margin-bottom:6px"><span class="tag-t">Suggested</span></div><div style="font-size:14px;line-height:1.45">${esc(obj.def)}</div><div class="small muted" style="margin-top:6px"><b>Why:</b> ${esc(obj.why)}</div></div>
         <div class="sec">Your list with it added</div>
         <div class="group">${list.map((a, i) => `<div class="li" ${a._new ? 'style="background:var(--accent-soft);margin:0 -14px;padding-left:14px;padding-right:14px"' : ''}><span class="attr-rank">${i + 1}</span><div class="b"><div class="t1">${esc(a.name)}</div></div></div>`).join('')}</div>
@@ -251,36 +253,21 @@
   /* =========================================================
      2 · Requirements
      ========================================================= */
-  PL.BODY.requirements = (mode, hl) => {
-    const s = S(), r = s.reqs, remote = s.jd.work === 'remote';
-    const row = (k, v, small) => `<div class="req" data-a="openReq" data-id="${k}"><div class="v">${v}${small ? `<small>${small}</small>` : ''}</div></div>`;
-    const custom = types => r.custom.filter(c => types.includes(c.type)).map(c => row(c.id, esc(c.label), 'Added by you')).join('');
-    const g = (key, title, rows) => rows ? `<div class="sec">${title}</div><div class="group ${hl === key ? 'hl' : ''}">${rows}</div>` : '';
-    return `${mode === 'screen' ? `<p class="lede">Must-haves from your job description, as written. Tap one to see the original wording or adjust it.</p>` : ''}
-      ${g('exp', 'Experience', row('exp', `${esc(r.role)}, ${r.minYears}+ years`, 'Shipping software products') + custom(['Experience']))}
-      ${g('skills', 'Skills', row('metrics', 'Defining metrics / data analysis', `Level: ${esc(r.metricsLevel.toLowerCase())}`) + row('ai', 'Generative AI / prompting', r.aiEither ? 'Experience or strong interest' : 'Experience required') + custom(['Skill']))}
-      ${g('loc', 'Location', row('loc', remote ? 'Remote (US)' : `${esc(r.office)}, in office ${r.days} days a week`, remote ? 'From your answer on step 1' : 'From “What we offer”') + custom(['Location']))}
-      ${g('other', 'Other', custom(['Work auth', 'Other']))}
-      <div class="sec">Not in your job description</div>
-      <div class="group ${hl === 'loc' ? 'hl' : ''}">
-        <div class="nij"><div class="q">Will you sponsor visas?</div><div class="chips">${[['yes', 'Yes'], ['no', 'No'], ['case', 'Case by case']].map(([v, l]) => PL.chip(l, r.visa === v, 'setVisa', `data-v="${v}"`)).join('')}</div></div>
-        ${remote ? '' : `<div class="nij"><div class="q">Open to relocation?</div><div class="chips">${[['yes', 'Yes'], ['no', 'No']].map(([v, l]) => PL.chip(l, r.relocation === v, 'setReloc', `data-v="${v}"`)).join('')}</div>${r.relocation === 'yes' ? '<div class="small muted">You offer a $1,000/month housing stipend, so we’ll mention it.</div>' : ''}</div>`}
-      </div>
-      <button class="btn btn-sm btn-secondary" style="margin-top:14px" data-a="openAddReq">Add requirement</button>`;
-  };
-  SCREENS.requirements = () => ({
-    title: 'Requirements', back: 'import', task: 'Requirements',
-    body: PL.BODY.requirements('screen'),
-    footer: `<button class="btn btn-primary" data-a="go" data-r="review">Looks right</button>`
-  });
   A.setVisa = d => { S().reqs.visa = d.v; };
   A.setReloc = d => { S().reqs.relocation = d.v; };
   A.openReq = d => PL.openSheet('req', { id: d.id });
   const yearOpts = () => [2, 3, 4, 5, 6, 7, 8, 9, 10].map(y => ({ v: y, l: `${y}+ years` }));
+  const metricsEdit = () => `<div class="sec">Level we’ll look for</div><div class="chips">${['Familiar', 'Uses daily', 'Expert'].map(l => PL.chip(l, S().reqs.metricsLevel === l, 'reqMetrics', `data-v="${l}"`)).join('')}</div>`;
   SHEETS.req = sh => {
     const s = S(), r = s.reqs, k = sh.id;
     const quote = (q, src) => `<div class="quote">“${esc(q)}”</div><div class="q-src">${src || 'From your job description'}, kept as written</div>`;
     let title = '', body = '';
+    if (k === 'visa') {
+      return {
+        title: 'Visa sponsorship', sub: 'Not in your job description · changes save automatically',
+        body: `<div class="chips">${[['yes', 'Yes'], ['no', 'No'], ['case', 'Case by case']].map(([v, l]) => PL.chip(l, r.visa === v, 'setVisa', `data-v="${v}"`)).join('')}</div><p class="small muted" style="margin:10px 2px 0">Will you sponsor visas? It sets who we can reach out to.</p>`
+      };
+    }
     if (k === 'exp') {
       title = 'Experience';
       body = quote(D.REQ_QUOTES.exp) + `<div class="sec">How we’ll check it</div><div class="group">
@@ -288,10 +275,10 @@
         <div class="fld-row"><span class="k">Minimum</span><div class="v"><select class="field inline" data-c="reqYears">${PL.options(yearOpts(), r.minYears)}</select></div></div>
         <div class="fld-row"><span class="k">Counts if</span><div class="v">Shipped software products</div></div></div>`;
     } else if (k === 'metrics') {
-      title = 'Skill';
-      body = quote(D.REQ_QUOTES.metrics) + `<div class="sec">Level we’ll look for</div><div class="chips">${['Familiar', 'Uses daily', 'Expert'].map(l => PL.chip(l, r.metricsLevel === l, 'reqMetrics', `data-v="${l}"`)).join('')}</div>`;
+      title = 'Defining metrics / data analysis';
+      body = quote(D.REQ_QUOTES.metrics) + metricsEdit();
     } else if (k === 'ai') {
-      title = 'Skill';
+      title = 'Generative AI / prompting';
       body = quote(D.REQ_QUOTES.ai) + `<div class="sec">What counts</div><div class="chips">${PL.chip('Experience or strong interest', r.aiEither, 'reqAi', 'data-v="1"')}${PL.chip('Experience only', !r.aiEither, 'reqAi', 'data-v="0"')}</div><p class="small muted" style="margin:10px 2px 0">Your posting says “or strong interest”, so that’s the default. Interest rarely shows on a profile, so we’ll usually ask.</p>`;
     } else if (k === 'loc') {
       title = 'Location';
@@ -342,29 +329,35 @@
     PL.S.sheet = null;
     PL.toast(`Added “${esc(label)}”. Pool updated.`);
   };
-  PL.FILL.requirements = () => { const r = S().reqs; if (!r.visa) r.visa = 'case'; if (!r.relocation) r.relocation = 'yes'; };
+  PL.FILL.review = () => { const r = S().reqs; if (!r.visa) r.visa = 'case'; if (!r.relocation) r.relocation = 'yes'; };
 
   /* =========================================================
      3 · Review & pool
      ========================================================= */
+  /* The funnel is view-only: the must-haves above it are where changes happen. */
   const LAYERS = [
-    { k: 'exp', lbl: () => `PM, ${S().reqs.minYears}+ yrs`, screen: 'requirements', hl: 'exp' },
-    { k: 'skills', lbl: () => '+ skills', screen: 'requirements', hl: 'skills' },
-    { k: 'loc', lbl: () => '+ location', screen: 'requirements', hl: 'loc' },
-    { k: 'attr', lbl: () => 'Strong on your attributes', screen: 'attributes' },
-    { k: 'move', lbl: () => 'Likely to move', screen: 'move' },
-    { k: 'base', lbl: () => 'Base range fits', screen: 'basestart' }
+    { k: 'exp', lbl: () => `PM, ${S().reqs.minYears}+ yrs` },
+    { k: 'skills', lbl: () => 'Skills' },
+    { k: 'loc', lbl: () => 'Location' },
+    { k: 'attr', lbl: () => 'Strong on your attributes' },
+    { k: 'move', lbl: () => 'Likely to move' },
+    { k: 'base', lbl: () => 'Base range fits' }
   ];
   PL.LAYERS = LAYERS;
   const barW = n => Math.max(3, Math.min(100, (Math.log10(Math.max(n, 1)) - .8) / (Math.log10(60000) - .8) * 100));
   const startOpts = ['Nov 2026', 'Dec 2026', 'Jan 2027', 'Feb 2027'];
   function baseOpts(lo, hi) { const o = []; for (let v = lo; v <= hi; v += 5) o.push({ v, l: `$${v}k` }); return o; }
   PL.baseOpts = baseOpts;
-  PL.mustsSummary = () => {
-    const s = S(), r = s.reqs;
-    return [`PM ${r.minYears}+ yrs`, 'Metrics', 'Gen AI', s.jd.work === 'remote' ? 'Remote (US)' : `${r.office} ${r.days} days`,
-      s.jd.work !== 'remote' && r.relocation ? (r.relocation === 'yes' ? 'relocation OK' : 'local only') : '',
-      r.visa ? `visa: ${{ yes: 'sponsor', no: 'no sponsorship', case: 'case by case' }[r.visa]}` : ''].concat(r.custom.map(c => c.label)).filter(Boolean).join(' · ');
+  /* One row per must-have, each opening just that requirement */
+  const reqRows = () => {
+    const s = S(), r = s.reqs, remote = s.jd.work === 'remote', visa = { yes: 'We sponsor', no: 'We don’t sponsor', case: 'Case by case' }[r.visa];
+    return [
+      PL.row('Experience', `${esc(r.role)}, ${r.minYears}+ years`, 'openReq', 'data-id="exp"'),
+      PL.row('Skill', `Defining metrics · ${esc(r.metricsLevel.toLowerCase())}`, 'openReq', 'data-id="metrics"'),
+      PL.row('Skill', `Generative AI${r.aiEither ? ' · or strong interest' : ''}`, 'openReq', 'data-id="ai"'),
+      PL.row('Location', remote ? 'Remote (US)' : `${esc(r.office)}, ${r.days} days a week${r.relocation === 'yes' ? ' · relocation OK' : r.relocation === 'no' ? ' · local only' : ' · <span class="need-t">relocation?</span> <span class="inf">Not in your JD</span>'}`, 'openReq', 'data-id="loc"'),
+      PL.row('Visa', `${visa || '<span class="need-t">Not answered</span>'} <span class="inf">Not in your JD</span>`, 'openReq', 'data-id="visa"')
+    ].concat(r.custom.map(c => PL.row(`+${esc(c.type)}`, esc(c.label), 'openReq', `data-id="${c.id}"`))).join('');
   };
   SCREENS.review = () => {
     const s = S(), p = PL.pool(), t = PL.target(), v = PL.verdict(), start = s.see.start.split(' ')[0];
@@ -372,83 +365,36 @@
     const big = LAYERS.find(L => L.k === ratios[0][0]);
     const vt = { healthy: `${PL.fmtN(p.base)} people are likely to fit and be reachable: plenty for ${t}.`, tight: `${PL.fmtN(p.base)} likely fits for ${t} recommended outreaches. Workable, with little slack.`, thin: `Only ${PL.fmtN(p.base)} likely fits for ${t} recommended outreaches. Consider loosening a layer.` }[v];
     return {
-      title: 'Review & pool', back: 'requirements', task: 'Review & pool',
-      body: `<div class="card"><div style="font-weight:600;font-size:15px">When do you need them to start?</div>
+      title: 'Role requirements', back: 'import', task: 'Role requirements',
+      body: `<p class="lede">Must-haves from your job description, as written. Tap one to see the original wording or adjust it.</p>
+        <div class="sec">Must-haves</div>
+        <div class="group">${reqRows()}</div>
+        <button class="btn btn-sm btn-secondary" style="margin-top:10px" data-a="openAddReq">Add requirement</button>
+        <div class="sec">Your talent pool, approximately</div>
+        <div class="card"><div style="font-weight:600;font-size:16px">When do you need them to start?</div>
           <select class="field" style="margin-top:10px" data-c="seeStart">${PL.options(startOpts, s.see.start)}</select>
           <div class="small muted" style="margin-top:8px">This sets how many people to reach out to.</div></div>
-        <div class="sec">Summary</div>
-        <div class="group">
-          ${PL.row('Attributes', s.attrs.map((a, i) => `${i + 1} ${esc(a.name)}`).join(' · '), 'openScreenSheet', 'data-s="attributes"')}
-          ${PL.row('Must-haves', esc(PL.mustsSummary()), 'openScreenSheet', 'data-s="requirements"')}
-          ${PL.row('Base range', `$${s.see.baseMin}–${s.see.baseMax}k`, 'openScreenSheet', 'data-s="basestart"')}
-        </div>
-        <div class="sec">Your talent pool, approximately</div>
-        <div class="card" style="padding:4px 14px">
-          ${LAYERS.map(L => `<div class="funnel-row" data-a="openLayer" data-k="${L.k}"><span class="lbl">${esc(L.lbl())}</span><span class="bar"><i style="width:${barW(p[L.k])}%"></i></span><span class="n">${PL.fmtN(p[L.k])}</span></div>`).join('')}
+        <div class="card" style="padding:4px 14px;margin-top:10px">
+          ${LAYERS.map(L => `<div class="funnel-row"><span class="lbl">${esc(L.lbl())}</span><span class="bar"><i style="width:${barW(p[L.k])}%"></i></span><span class="n">${PL.fmtN(p[L.k])}</span></div>`).join('')}
           <div class="funnel-row final"><span class="lbl"><b>Shortlist</b></span><span class="bar"><i style="width:${barW(t)}%"></i></span><span class="n">top ${t}</span></div>
           <div style="padding:2px 0 10px"><button class="textlink" data-a="openWhy">Why ${t}?</button></div>
         </div>
         <div class="verdict ${v}"><div><b>${v} for a ${esc(start)} start</b><div style="margin-top:3px">${vt}</div></div></div>
-        <p class="small muted" style="margin:10px 2px 0">Biggest cut: <b>${esc(big.lbl())}</b>. Tap any layer to adjust what’s behind it.</p>`,
+        <p class="small muted" style="margin:10px 2px 0">Biggest cut: <b>${esc(big.lbl())}</b>.</p>`,
       footer: `<button class="btn btn-primary" data-a="go" data-r="shortlist">Build shortlist of ${t}</button>`
     };
   };
   C.seeStart = v => { S().see.start = v; };
   C.seeBaseMin = v => { S().see.baseMin = Number(v); };
   C.seeBaseMax = v => { S().see.baseMax = Number(v); };
-  PL.BODY.basestart = (mode, hl) => {
-    const s = S().see;
-    return `<div class="group ${hl === 'comp' ? 'hl' : ''}">
-        <div class="fld-row"><span class="k">Base range</span><div class="v" style="flex-wrap:nowrap"><select class="field inline" data-c="seeBaseMin" aria-label="Base minimum">${PL.options(baseOpts(100, s.baseMax - 5), s.baseMin)}</select><span class="muted">to</span><select class="field inline" data-c="seeBaseMax" aria-label="Base maximum">${PL.options(baseOpts(s.baseMin + 5, 350), s.baseMax)}</select></div></div>
-        <div class="fld-row"><span class="k">Start date</span><div class="v"><select class="field inline" data-c="seeStart">${PL.options(startOpts, s.start)}</select></div></div>
-      </div>
-      <p class="small muted" style="margin:8px 2px 0">Base range from your job description. Candidates see it in the first email.</p>`;
-  };
-
-  /* Screen-as-sheet: funnel layers, summary rows, criteria chips */
-  const SCREEN_TITLES = { attributes: 'Attributes', requirements: 'Must-haves', basestart: 'Base range & start date' };
-  A.openLayer = d => {
-    const L = LAYERS.find(x => x.k === d.k);
-    PL.openSheet('screenSheet', { screen: L.screen, layer: L.k, hl: L.hl, snap: PL.pool()[L.k] });
-  };
-  A.openScreenSheet = d => {
-    const snap = { vis: PL.visible().map(c => c.id), attrs: JSON.parse(JSON.stringify(S().attrs)), reqs: JSON.parse(JSON.stringify(S().reqs)), see: JSON.parse(JSON.stringify(S().see)) };
-    PL.openSheet('screenSheet', { screen: d.s, from: S().route, crit: snap });
-  };
-  SHEETS.screenSheet = sh => {
-    const L = sh.layer ? LAYERS.find(x => x.k === sh.layer) : null;
-    let delta = '';
-    if (L) {
-      const now = PL.pool()[L.k], was = sh.snap;
-      const dir = Math.round(now) === Math.round(was) ? '' : (now > was ? '<span class="up">up</span>' : '<span class="down">down</span>');
-      delta = `<div class="delta"><span>${esc(L.lbl())}</span><b>${PL.fmtN(was)} → ${PL.fmtN(now)}</b>${dir}<span class="live">live</span></div>`;
-    }
-    if (sh.screen === 'move') {
-      return {
-        title: 'Likely to move', sub: 'An estimate, not a control',
-        body: delta + `<p style="font-size:14px;line-height:1.5;margin:0 2px 12px">Estimated from public signals like tenure, career stage and recent job changes. The specific signals are never shown or used in outreach.</p>
-          <p style="font-size:14px;line-height:1.5;margin:0 2px 12px">You can’t change who wants to move, but a later start date gives more people time to become reachable.</p>
-          <div class="group hl"><div class="fld-row"><span class="k">Start date</span><div class="v"><select class="field inline" data-c="seeStart">${PL.options(startOpts, S().see.start)}</select></div></div></div>`,
-      };
-    }
-    const title = L ? esc(L.lbl()) : SCREEN_TITLES[sh.screen];
-    return { title, sub: L ? `Set in ${SCREEN_TITLES[sh.screen]} · changes save automatically` : 'Changes save automatically', tall: sh.screen !== 'basestart', body: delta + PL.BODY[sh.screen]('sheet', sh.hl) };
-  };
-  PL.SHEET_CLOSE.screenSheet = sh => {
-    if (sh.from !== 'shortlist' || !sh.crit) return;
-    const before = sh.crit.vis, after = PL.visible().map(c => c.id);
-    const added = after.filter(x => !before.includes(x)).length, dropped = before.filter(x => !after.includes(x)).length;
-    if (added || dropped) setTimeout(() => { PL.toast(`Shortlist updated: ${added} new, ${dropped} dropped`, 'criteria', sh.crit); PL.render(); }, 0);
-  };
-  PL.UNDO.criteria = snap => { const s = S(); s.attrs = snap.attrs; s.reqs = snap.reqs; s.see = snap.see; };
 
   A.openWhy = () => PL.openSheet('why');
   SHEETS.why = () => {
     const t = PL.target();
-    const steps = [['Reply', '40%', 'typical for hiring-manager outreach to senior PMs'], ['Interested', '60%', 'of replies'], ['Complete take-home', '70%', ''], ['Advance to onsite', '60%', ''], ['Offer', '50%', ''], ['Accept', '80%', '']];
+    const steps = [['Reply', '40%', 'typical for hiring-manager outreach to senior PMs'], ['Interested', '60%', 'of replies'], ['Complete practical assessment', '70%', ''], ['Advance to onsite', '60%', ''], ['Offer', '50%', ''], ['Accept', '80%', '']];
     return {
       title: `Why ${t}?`, sub: `Worked back from a ${S().see.start} start`,
-      body: `<div class="card"><div class="small" style="line-height:1.7">Offer accepted by <b>early Nov</b>, plus notice period<br>Onsites <b>late Oct</b><br>Take-homes <b>mid Oct</b><br>Replies <b>early Oct</b><br>Outreach <b>this week</b></div></div>
+      body: `<div class="card"><div class="small" style="line-height:1.7">Offer accepted by <b>early Nov</b>, plus notice period<br>Onsites <b>late Oct</b><br>Practical assessments <b>mid Oct</b><br>Replies <b>early Oct</b><br>Outreach <b>this week</b></div></div>
         <div class="sec">Conversion assumptions</div>
         <div class="group">${steps.map(([a, b, c]) => `<div class="fld-row"><span class="k" style="width:130px">${a}</span><div class="v"><b>${b}</b><span class="small muted">${c}</span></div></div>`).join('')}</div>
         <p class="small muted" style="margin:10px 2px">${t} × 40% × 60% × 70% × 60% × 50% × 80% ≈ 1 hire. These are assumptions until your own conversions replace them.</p>`
@@ -470,16 +416,12 @@
     </div>`;
   }
   SCREENS.shortlist = () => {
+    if (S().out.started && PL.hubScreen) return PL.hubScreen();
     const s = S(), vis = PL.visible(), t = PL.target();
     const heading = vis.length < t ? `${vis.length} people match. Loosen a must-have to reach ${t}.` : `${vis.length} people for your ${esc(PL.titleText())} role`;
     return {
       title: 'Shortlist', back: 'review', task: 'Shortlist',
-      body: `<div class="crit">
-          <button class="chip sm" data-a="openScreenSheet" data-s="attributes">Attributes</button>
-          <button class="chip sm" data-a="openScreenSheet" data-s="requirements">Must-haves</button>
-          <button class="chip sm" data-a="openScreenSheet" data-s="basestart">Base & start date</button>
-        </div>
-        <div class="sl-title">${heading}</div>
+      body: `<div class="sl-title">${heading}</div>
         <div class="sl-sub">Ranked by fit, best match first</div>
         ${vis.map(candCard).join('')}`,
       footer: `<button class="btn btn-primary" data-a="confirmOutreach" ${vis.length ? '' : 'disabled'}>Continue to outreach with ${vis.length}</button>`
@@ -507,16 +449,18 @@
   A.openCand = d => PL.openSheet('cand', { id: d.id });
   A.candNav = d => { S().sheet.id = d.id; };
   SHEETS.cand = sh => {
-    const s = S(), c = PL.cand(sh.id), vis = PL.visible(), i = vis.findIndex(x => x.id === c.id);
+    const s = S(), c = PL.cand(sh.id), live = s.out.started, vis = live ? PL.orderedPre() : PL.visible(), i = vis.findIndex(x => x.id === c.id);
+    const stage = live && i >= 0 && PL.stageOf ? PL.stageOf(c, i) : null;
     const prev = vis[i - 1], next = vis[i + 1];
     const blocks = s.attrs.map((a, k) => { const lv = PL.level(c, a.id); return `<div class="ev-block"><div class="hd"><span class="r">${k + 1}</span>${esc(a.name)}<span style="flex:1"></span><span class="lv ${lv}">${PL.LV_TEXT[lv]}</span></div><ul>${PL.evidence(c, a.id).map(x => `<li>${esc(x)}</li>`).join('')}</ul></div>`; }).join('');
     return {
-      title: `${i >= 0 ? `${i + 1}. ` : ''}${esc(c.name)}`, sub: `${esc(c.title)} · ${esc(c.co)} · ${esc(c.loc)}`, tall: true,
+      title: `${i >= 0 && !live ? `${i + 1}. ` : ''}${esc(c.name)}`, sub: `${esc(c.title)} · ${esc(c.co)} · ${esc(c.loc)}`, tall: true,
       swipePrev: prev ? `candNav:${prev.id}` : '', swipeNext: next ? `candNav:${next.id}` : '',
-      body: `<div class="sec" style="margin-top:0">Evidence by attribute</div>${blocks}
+      body: `${stage ? `<div class="hstage" style="margin:0 0 4px"><div class="st1">${stage.line}</div>${stage.line2 ? `<div class="st2">${stage.line2}</div>` : ''}</div>${stage.acts ? `<div class="cand-acts" style="margin:8px 0 6px">${stage.acts}</div>` : ''}` : ''}
+        <div class="sec" ${stage ? '' : 'style="margin-top:0"'}>Evidence by attribute</div>${blocks}
         <div class="sec">Must-haves</div><p style="font-size:14px;margin:0 2px">${esc(PL.mustLine(c))}</p>`,
       foot: `<div class="sheet-nav"><button data-a="candNav" data-id="${prev ? prev.id : ''}" ${prev ? '' : 'disabled'}>Previous</button><span>${i >= 0 ? `${i + 1} of ${vis.length}` : ''}</span><button data-a="candNav" data-id="${next ? next.id : ''}" ${next ? '' : 'disabled'}>Next</button></div>
-        ${i >= 0 ? `<button class="btn btn-secondary" data-a="openPass" data-id="${c.id}">Pass on ${esc(c.name.split(' ')[0])}</button>` : ''}`
+        ${i >= 0 && !live ? `<button class="btn btn-secondary" data-a="openPass" data-id="${c.id}">Pass on ${esc(c.name.split(' ')[0])}</button>` : ''}`
     };
   };
   A.confirmOutreach = () => { const ids = PL.visible().map(c => c.id); S().sl.final = ids; PL.go('see'); PL.toast(`Shortlist ready: ${ids.length} pre-candidates`); };

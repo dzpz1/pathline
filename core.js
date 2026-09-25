@@ -15,7 +15,9 @@ window.PL = window.PL || {};
     x: '<path d="M6 6l12 12M18 6L6 18"/>',
     up: '<path d="M7 14l5-5 5 5"/>',
     down: '<path d="M7 10l5 5 5-5"/>',
-    menu: '<path d="M4 7h16M4 12h16M4 17h16"/>'
+    menu: '<path d="M4 7h16M4 12h16M4 17h16"/>',
+    mic: '<rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0014 0M12 18v3"/>',
+    upload: '<path d="M12 15V4M7 9l5-5 5 5"/><path d="M4 15.5V19a1 1 0 001 1h14a1 1 0 001-1v-3.5"/>'
   };
   PL.ic = (n, cls) => `<svg class="ic ${cls || ''}" viewBox="0 0 24 24" aria-hidden="true">${ICONS[n] || ''}</svg>`;
   const ic = PL.ic;
@@ -43,64 +45,41 @@ window.PL = window.PL || {};
   /* ---------- routes ---------- */
   PL.ROUTES = [
     { id: 'start', m: 0, label: 'Welcome' },
-    { id: 'import', m: 1, label: 'What the role needs', step: 1 },
-    { id: 'requirements', m: 1, label: 'Requirements', step: 2 },
-    { id: 'review', m: 1, label: 'Review & pool', step: 3 },
-    { id: 'shortlist', m: 1, label: 'Shortlist', step: 4 },
-    { id: 'see', m: 2, label: 'What candidates will see', step: 1 },
-    { id: 'sequence', m: 2, label: 'Email sequence', step: 2 },
-    { id: 'started', m: 2, label: 'Outreach started', step: 3 },
-    { id: 'monitor', m: 3, label: 'Monitoring' },
-    { id: 'replies', m: 4, label: 'Replies' },
-    { id: 'postchat', m: 4, label: 'After the chat' },
-    { id: 'takehome', m: 4, label: 'Take-home' },
-    { id: 'thsent', m: 4, label: 'Take-home sent' },
-    { id: 'reviewq', m: 5, label: 'Take-home reviews' },
-    { id: 'onsite', m: 5, label: 'Onsite' }
+    { id: 'jd', m: 1, label: 'Job description' },
+    { id: 'import', m: 1, label: 'Candidate attributes' },
+    { id: 'review', m: 1, label: 'Role requirements' },
+    { id: 'shortlist', m: 1, label: 'Shortlist' },
+    { id: 'see', m: 2, label: 'Outreach fact sheet' },
+    { id: 'sequence', m: 2, label: 'Email sequence' },
+    { id: 'monitor', m: 3, label: 'Optimize outreach', noStep: true },
+    { id: 'assess', m: 4, label: 'Practical assessment', noStep: true }
   ];
-  PL.MILESTONES = { 1: 'Shortlist', 2: 'Outreach', 3: 'Monitoring', 4: 'Chat & take-home', 5: 'Review → onsite' };
-  PL.GOALS = { 1: 'Shortlist for outreach', 2: 'Outreach', 3: 'Monitoring', 4: 'Chat & take-home', 5: 'Review & onsite' };
-  PL.STARTS = { 2: 'Starts when your shortlist is ready', 3: 'Starts when outreach begins', 4: 'Starts when someone replies', 5: 'Starts when a take-home comes in' };
+  PL.GOALS = { 1: 'Shortlist for outreach', 2: 'Outreach', 3: 'Monitoring', 4: 'Chat & practical assessment', 5: 'Review & onsite' };
+  PL.STARTS = { 2: 'Starts when your shortlist is ready', 3: 'Starts when outreach begins', 4: 'Starts when someone replies', 5: 'Starts when a practical assessment comes in' };
   PL.routeIdx = id => PL.ROUTES.findIndex(r => r.id === id);
-  PL.stepsIn = m => PL.ROUTES.filter(r => r.m === m && r.step).length;
-
-  PL.ABOUT = {
-    start: { g: 'Every hire raises the bar', p: 'Pathline is a recruiting tool for tech companies in their scaling phase. It finds experienced people with real evidence of what a role needs, reaches out on your behalf, and tests them rigorously without losing their interest.', t: ['Tap Get started. You’re Farah, CTO at Nectar Social, hiring a Senior PM, AI.', 'Use the steps on the left, or the in-app Menu, to move around.'] },
-    import: { g: 'From job description to what the role needs', p: 'Paste a link or the text; Pathline tells which. The role header shows it understood the role, and the focus is the ranked list of attributes the role needs.', t: ['Tap Import: Nectar’s link is pre-filled.', 'Answer the two questions in the role header.', 'Re-rank with the arrows under a number.', 'Tap a card and edit any line; it saves as you type.', 'Tap Add attribute for suggestions.'] },
-    requirements: { g: 'Hard parameters only, as your JD wrote them', p: 'Must-haves are kept word for word and structured so they can be checked against profiles. Pathline also asks about what the JD left out.', t: ['Tap a row to see the original wording.', 'Answer visa sponsorship and relocation.', 'Add a requirement: type, level, Add.'] },
-    review: { g: 'How big is your realistic talent pool?', p: 'Set when you need them to start. The funnel narrows from must-haves to people who are strong on your attributes, likely to move, and within your base range. Tap any layer to adjust what’s behind it.', t: ['Change the start date.', 'Tap “Base range fits” and raise the top of the range.', 'Tap “Why 25?”.'] },
-    shortlist: { g: 'The people Pathline sourced', p: 'Everyone here is included by default. Tap a card for their evidence; Pass on anyone who isn’t right, and the next best takes their place.', t: ['Tap a card to see evidence by attribute.', 'Pass on someone, then Undo.', 'Continue to outreach: no confirmation step.'] },
-    see: { g: 'Everything candidates see, and when', p: 'Give first: comp, the process and your response commitment are disclosed before candidates are asked for effort. This sits right before the emails because it’s what they disclose.', t: ['Pick a why-now type: that’s enough.', 'Move Equity to “in outreach emails”, then see email 4.', 'Remove a field, then bring it back from Hidden.', 'Add information: relocation support.'] },
-    sequence: { g: 'Five emails that reveal more each time', p: 'Sent from Farah’s mailbox. Every fact comes from the company fact bank; personalized lines show their source; blanks block approval.', t: ['Expand an email and edit any text directly.', 'Tap “Talk it through” under an email’s revise box.', 'Change all emails: tap Growth.', 'Approve, then type how many to reach out to at a time.'] },
-    started: { g: 'Outreach is live', p: 'Pathline paces outreach by how many pre-candidates are active at a time. When someone replies or finishes the sequence, the next person starts.', t: ['Change how many are active.', 'Skip ahead 10 days.'] },
-    monitor: { g: 'Milestone 3: keep pace with your start date', p: 'Replies are the headline metric; opens are approximate. Suggestions appear only when they’d help, and nothing new joins without your say-so.', t: ['Apply the send-timing suggestion.', 'Review the 4 new matches.', 'Open the replies waiting for you.'] },
-    replies: { g: 'The moment of connection', p: 'When a pre-candidate replies, they become a candidate and join the Pathline network. Their reply shows they’re open to a move, so they’re a warm lead for this role and others.', t: ['Open Maya’s reply and choose “Chat first”.', 'Open Aisha’s and go straight to the take-home.'] },
-    postchat: { g: 'Gut check first', p: 'The hiring manager’s impression is captured before anything else, so it’s an independent check. Pathline reads the transcript too, but that read stays internal.', t: ['Give a gut check, paste the sample transcript, confirm consent.', 'Send the take-home, or try Pass to see the graceful decline.'] },
-    takehome: { g: 'A take-home that tests every attribute', p: 'Generated from the fact bank around a fictional company, so it’s realistic without being free work. Each section shows what it tests.', t: ['Each section says what it tests.', 'Adaptability is weighted up because the chat didn’t show it.', 'Change the assignment by voice: Talk it through.'] },
-    thsent: { g: 'The candidate knows when they’ll hear back', p: 'Review-by and decision dates come from your response commitment and are tracked. The take-home is AI-graded per attribute, and a strong one boosts the candidate across Pathline if they opt in.', t: ['Skip ahead to when submissions arrive.'] },
-    reviewq: { g: 'Milestone 5: decide by the dates you committed to', p: 'Submissions sorted by deadline. Each reviewer decides independently; decisions are revealed after you submit.', t: ['Tap Maya’s card to see her submission.', 'Decide, and see Kaan’s decision revealed.'] },
-    onsite: { g: 'Ready for onsites', p: 'Advanced candidates, grouped by scheduling status. Scheduling happens on your own calendar; Pathline nudges when someone hasn’t booked.', t: ['Send a scheduling link.', 'Mark someone as scheduled.'] }
-  };
+  /* The menu: a flat list of places. It holds no state; each screen shows its own. */
+  PL.MENU = ['jd', 'import', 'review', 'shortlist', 'see', 'sequence', 'monitor', 'assess'];
 
   /* ---------- state ---------- */
-  const KEY = 'pathline-prototype-v3';
+  const KEY = 'pathline-prototype-v4';
   PL.initialState = () => ({
     route: 'start', maxIdx: 0,
-    jd: { input: D.JD_URL, parsing: false, parseStep: 0, imported: false, source: '', work: null },
+    jd: { input: '', parsing: false, parseStep: 0, imported: false, source: '', work: 'hybrid' },
     attrs: D.ATTRS.map(a => Object.assign({}, a, { strong: a.strong.slice(), weak: a.weak.slice() })),
     newAttrId: null,
     ui: { voice: {}, listening: null, confirmRemove: null, addQuery: '', addWarn: false, reqType: 'Skill', reqLevel: 'Uses daily', reqYears: '', reqLabel: '', openEmail: 0, secOpen: { scenario: true }, passReasons: [] },
     reqs: { minYears: 5, role: 'Product manager', metricsLevel: 'Uses daily', aiEither: true, office: 'Palo Alto', days: 4, visa: null, relocation: null, custom: [] },
-    see: { title: null, whyType: null, whyLine: '', place: {}, hidden: {}, custom: [], reportsTo: '', engineers: '', otherPMs: '', directReports: '0', baseMin: 170, baseMax: 225, equity: '', vesting: '4 yr, 1 yr cliff', bonus: '', start: 'Dec 2026', hm: '', commitment: 48,
-      stages: [{ name: 'Take-home assignment', h: 3 }, { name: 'Onsite interview', h: 4 }, { name: 'Final interview', h: 1 }] },
+    see: { title: null, whyType: 'New role', whyLine: '', place: {}, hidden: {}, custom: [], reportsTo: 'Misbah (CEO)', engineers: '6', otherPMs: '1', directReports: '0', facts: PL.D.FACTS.slice(), baseMin: 170, baseMax: 225, equity: '0.1–0.2%', vesting: '4 yr, 1 yr cliff', bonus: '10% target', start: 'Dec 2026', hm: PL.D.HMS[0], commitment: 48,
+      inferred: { why: true, hm: true, team: true, equity: true, bonus: true },
+      stages: [{ name: 'Practical assessment', h: 3 }, { name: 'Onsite interview', h: 4 }, { name: 'Final interview', h: 1 }] },
     sl: { dec: {}, final: null },
     seq: { versions: { v1: { name: 'v1 Balanced', kind: 'base', emails: [0, 1, 2, 3, 4].map(() => ({ variant: 'base', hist: [], edits: {}, applied: null })) } },
-      order: ['v1'], active: 'v1', preview: null, revising: null, revisingAll: false, approved: false, oneTap: true,
+      order: ['v1'], active: 'v1', preview: null, revising: null, revisingAll: false, approved: false,
       facts: { rev: '', revShare: 'approx', custNow: '', custThen: '', custShare: 'exact', teamNow: '', teamNext: '', teamShare: 'exact' } },
-    out: { active: 6, started: false, timingApplied: false, timingDismissed: false, activeDismissed: false, newAdded: {}, newPassed: {} },
+    out: { active: 6, started: false, from: 'misbah@nectarsocial.com', window: 'Weekday mornings', timingDismissed: false, activeDismissed: false, newAdded: {}, newPassed: {} },
     network: 0, fromYou: 0,
-    m4: { status: { c1: 'new', c2: 'new', c3: 'new' }, bookingLink: 'cal.example.com/farah-nectar', chat: { overall: null, want: null, note: '', transcript: '', consent: false },
-      thCand: 'c1', timebox: '3h', thSent: false },
+    m4: { status: { c1: 'chatted', c2: 'new', c3: 'new', c12: 'sent' }, due: { c12: 'Oct 16' }, bookingLink: 'cal.example.com/misbah-nectar', chat: { overall: null, want: null, note: '', transcript: '', consent: false },
+      thCand: null, chatCand: null, timebox: '3h', tweaks: {} },
     m5: { mine: {}, final: {}, onsite: [{ id: 'c7', state: 'toschedule', sent: 'Oct 10', nudge: true }, { id: 'c6', state: 'scheduled', date: 'Oct 21' }] },
     sheet: null, toast: null
   });
@@ -110,7 +89,8 @@ window.PL = window.PL || {};
       const raw = localStorage.getItem(KEY);
       if (!raw) return null;
       const s = JSON.parse(raw);
-      s.sheet = null; s.toast = null;
+      s.sheet = null; s.toast = null; s.navOpen = false;
+      if (PL.routeIdx(s.route) < 0) s.route = 'shortlist';
       return s;
     } catch (e) { return null; }
   };
@@ -123,7 +103,7 @@ window.PL = window.PL || {};
     const S = PL.S;
     const target = PL.routeIdx(route);
     for (let i = 0; i < target; i++) { const f = PL.FILL[PL.ROUTES[i].id]; if (f) f(); }
-    S.route = route; S.sheet = null;
+    S.route = route; S.sheet = null; S.navOpen = false;
     S.maxIdx = Math.max(S.maxIdx || 0, target);
   };
 
@@ -135,11 +115,8 @@ window.PL = window.PL || {};
   const A = PL.A;
   A.go = d => PL.go(d.r);
   A.noop = () => {};
-  A.reset = () => { try { localStorage.removeItem(KEY); } catch (e) { } PL.S = PL.initialState(); PL.closeDrawer(); };
+  A.reset = () => { try { localStorage.removeItem(KEY); } catch (e) { } PL.S = PL.initialState(); };
   A.closeSheet = () => { const sh = PL.S.sheet; if (sh && PL.SHEET_CLOSE[sh.type]) PL.SHEET_CLOSE[sh.type](sh); PL.S.sheet = null; };
-  A.drawer = () => { document.getElementById('drawer').classList.add('on'); };
-  A.closeDrawer = () => PL.closeDrawer();
-  PL.closeDrawer = () => { const d = document.getElementById('drawer'); if (d) d.classList.remove('on'); };
   A.toastUndo = () => { const t = PL.S.toast; if (t && t.undo && PL.UNDO[t.undo]) PL.UNDO[t.undo](t.data); PL.S.toast = null; };
   PL.openSheet = (type, props) => { PL.S.sheet = Object.assign({ type }, props || {}); };
 
@@ -152,51 +129,6 @@ window.PL = window.PL || {};
   };
 
   /* ---------- rendering ---------- */
-  function navHTML() {
-    const S = PL.S, cur = PL.routeIdx(S.route);
-    let h = '';
-    for (let m = 1; m <= 5; m++) {
-      h += `<div class="nav-m"><div class="nav-m-title">Milestone ${m} · ${PL.MILESTONES[m]}</div>`;
-      let n = 0;
-      PL.ROUTES.forEach((r, i) => {
-        if (r.m !== m) return; n++;
-        const cls = i === cur ? 'cur' : (i < cur ? 'done' : '');
-        h += `<button class="nav-step ${cls}" data-a="go" data-r="${r.id}"><span class="n">${i < cur ? '✓' : n}</span>${esc(r.label)}</button>`;
-      });
-      h += '</div>';
-    }
-    return h;
-  }
-  function leftHTML() {
-    const S = PL.S;
-    return `<div class="wordmark"><span class="dotmark"></span>Pathline</div>
-      <div class="kicker">Employer prototype · outbound flow<br>You’re Farah, CTO at Nectar Social, hiring a Senior PM, AI.</div>
-      <nav class="nav">${navHTML()}</nav>
-      <div class="panel-foot">
-        <span class="demo-badge">Demo data: the job description is Nectar’s public posting; candidates, numbers and replies are fictional</span>
-        <button class="linkbtn" data-a="reset">Reset demo</button>
-      </div>`;
-  }
-  function rightHTML() {
-    const S = PL.S, r = PL.ROUTES[PL.routeIdx(S.route)], a = PL.ABOUT[S.route] || PL.ABOUT.start;
-    const m = r.m ? `Milestone ${r.m} · ${PL.MILESTONES[r.m]}` : 'Welcome';
-    return `<div class="about fade-in"><div class="m">${m}</div><h3>${esc(a.g)}</h3><p>${esc(a.p)}</p>
-      <div class="try">Try</div><ul>${a.t.map(t => `<li>${esc(t)}</li>`).join('')}</ul></div>`;
-  }
-  let panelKey = '';
-  function renderPanels() {
-    const S = PL.S, key = `${S.route}`;
-    if (key === panelKey) return;
-    const routeChanged = panelKey.split('|')[0] !== S.route;
-    panelKey = key;
-    const left = document.getElementById('left'), nav = left.querySelector('.nav'), st = nav ? nav.scrollTop : 0;
-    left.innerHTML = leftHTML();
-    const nn = left.querySelector('.nav');
-    if (nn) { nn.scrollTop = st; const cur = nn.querySelector('.cur'); if (cur && routeChanged) cur.scrollIntoView({ block: 'nearest' }); }
-    if (routeChanged) document.getElementById('right').innerHTML = rightHTML();
-    document.getElementById('drawer').innerHTML = `<div class="dbg" data-a="closeDrawer"></div><div class="dpanel">${leftHTML()}</div>`;
-  }
-
   function renderApp() {
     const S = PL.S, app = document.getElementById('app');
     const prev = document.getElementById('scroll');
@@ -206,12 +138,13 @@ window.PL = window.PL || {};
     const r = PL.ROUTES[PL.routeIdx(S.route)];
     let h = '';
     if (!scr.noBar) {
-      const n = PL.stepsIn(r.m);
-      const sub = `${r.step ? `Step ${r.step} of ${n} · ` : ''}${scr.task || r.label}`;
-      const tasks = PL.needsYou ? PL.needsYou().length : 0;
-      h += `<div class="appbar">${scr.back ? `<button class="back" data-a="go" data-r="${scr.back}" aria-label="Back">${ic('back', 'lg')}</button>` : ''}<div class="tt"><div class="t">${esc(PL.GOALS[r.m])}</div><div class="goal">${esc(sub)}</div></div>
-        <button class="menu-btn" data-a="openMenu">Menu${tasks ? `<span class="badge">${tasks}</span>` : ''}</button></div>`;
-      if (r.step) h += `<div class="progress"><i style="width:${r.step / n * 100}%"></i></div>`;
+      const step = r.noStep ? 0 : PL.MENU.indexOf(r.id) + 1, n = PL.ROUTES.filter(x => PL.MENU.includes(x.id) && !x.noStep).length;
+      const todo = Object.values(PL.todos ? PL.todos() : {}).reduce((a, b) => a + b, 0);
+      const task = scr.task || r.label;
+      const sub = scr.sub != null ? scr.sub : step ? `Step ${step} of ${n} · ${task}` : task;
+      h += `<div class="appbar">${scr.back ? `<button class="back" ${scr.backA ? `data-a="${scr.backA}"` : `data-a="go" data-r="${scr.back}"`} aria-label="Back">${ic('back', 'lg')}</button>` : ''}<div class="tt"><div class="t">${esc(scr.head || PL.GOALS[r.m])}</div><div class="goal">${esc(sub)}</div></div>
+        <button class="menu-ic" data-a="openMenu" aria-label="Menu${todo ? `, ${todo} to-do${todo === 1 ? '' : 's'}` : ''}">${ic('menu', 'lg')}${todo ? `<span class="badge">${todo}</span>` : ''}</button></div>`;
+      if (step && !scr.head) h += `<div class="progress"><i style="width:${step / n * 100}%"></i></div>`;
     }
     h += `<div class="scroll ${same ? '' : 'fade-in'}" id="scroll">${scr.body}</div>`;
     if (scr.footer) h += `<div class="footer" id="footer">${scr.footer}</div>`;
@@ -277,7 +210,7 @@ window.PL = window.PL || {};
     root.innerHTML = `<div class="toast"><span>${t.text}</span>${t.undo ? `<button data-a="toastUndo">Undo</button>` : ''}</div>`;
   }
 
-  PL.render = () => { renderPanels(); renderApp(); renderSheet(); renderToast(); };
+  PL.render = () => { renderApp(); renderSheet(); renderNav(); renderToast(); };
 
   /* ---------- events ---------- */
   document.addEventListener('click', e => {
@@ -310,6 +243,7 @@ window.PL = window.PL || {};
       const fn = A[t.dataset.enter];
       if (fn) { fn(t.dataset, t, e); PL.save(); PL.render(); }
     }
+    if (e.key === 'Escape' && PL.S.navOpen) { PL.S.navOpen = false; PL.render(); return; }
     if (e.key === 'Escape' && PL.S.sheet) { A.closeSheet(); PL.save(); PL.render(); }
   });
   document.addEventListener('focusout', e => {
@@ -381,37 +315,50 @@ window.PL = window.PL || {};
       PL.save(); PL.render();
     }, 1300);
   };
-  PL.talkLink = (key, label) => PL.S.ui.listening === key
-    ? `<div class="listening">Listening…</div>`
-    : `<button class="textlink talk" data-a="talk" data-t="${key}">${label || 'Talk it through'}</button>`;
+  PL.micBtn = key => `<button class="tool ${PL.S.ui.listening === key ? 'on' : ''}" data-a="talk" data-t="${key}" aria-label="Talk it through">${ic('mic')}</button>`;
+  /* A plain ask-for-a-change box: the mic sits inside the field, on the right. */
+  PL.askBox = (key, ph, enter, extra) => { const on = PL.S.ui.listening === key; return `<div class="ask"><input class="field" id="${key}" value="${esc(PL.S.ui.voice[key] || '')}" placeholder="${on ? 'Listening…' : esc(ph)}" data-enter="${enter}" ${extra || ''}><button class="ask-mic ${on ? 'on' : ''}" data-a="talk" data-t="${key}" aria-label="${on ? 'Listening' : 'Talk it through'}">${ic('mic')}</button></div>`; };
 
-  /* ---------- Menu: what needs you, and every milestone ---------- */
-  A.openMenu = () => PL.openSheet('menu');
-  A.menuGo = d => {
-    PL.S.sheet = null;
-    PL.go(d.r);
-    if (d.open && PL.A[d.open]) PL.A[d.open]({});
+  /* ---------- Menu: every step, with red badges on what needs attention ---------- */
+  A.openMenu = () => { PL.S.sheet = null; PL.S.navOpen = true; };
+  A.closeNav = () => { PL.S.navOpen = false; };
+  /* Open the shortlist at a milestone's section, filling in everything before it so any step can be jumped to. */
+  PL.openHub = anchor => {
+    if (!PL.S.out.started) PL.go('monitor');
+    PL.go('shortlist');
+    setTimeout(() => { const el = document.getElementById('sec-' + anchor), sc = document.getElementById('scroll'); if (el && sc) sc.scrollTop = el.offsetTop - (el.offsetParent === sc ? 0 : sc.offsetTop) - 8; }, 30);
   };
-  PL.SHEETS.menu = () => {
-    const S = PL.S, tasks = PL.needsYou();
-    const ms = [1, 2, 3, 4, 5].map(m => {
-      const idxs = PL.ROUTES.map((r, i) => r.m === m ? i : -1).filter(i => i >= 0);
-      const firstI = idxs[0], lastI = idxs[idxs.length - 1], cur = PL.routeIdx(S.route);
-      const reached = (S.maxIdx || 0) >= firstI || cur >= firstI || (PL.milestoneReady ? PL.milestoneReady(m) : false);
-      const done = (S.maxIdx || 0) > lastI;
-      const status = !reached ? PL.STARTS[m] : done ? 'Done' : (() => { const r = PL.ROUTES[Math.min(Math.max(cur, S.maxIdx || 0), lastI)]; return r.step ? `In progress · Step ${Math.min(r.step, PL.stepsIn(m))} of ${PL.stepsIn(m)}` : 'In progress'; })();
-      const summary = reached && PL.milestoneSummary ? PL.milestoneSummary(m) : '';
-      const target = PL.ROUTES[cur >= firstI && cur <= lastI ? cur : Math.min(Math.max(S.maxIdx || 0, firstI), lastI)].id;
-      return `<div class="mrow ${reached ? '' : 'off'}" ${reached ? `data-a="menuGo" data-r="${target}"` : ''}><span class="mnum">${m}</span><div class="b"><div class="t1">${esc(PL.GOALS[m])}</div><div class="t2">${esc(status)}${summary ? ` · ${esc(summary)}` : ''}</div></div></div>`;
-    }).join('');
-    return {
-      title: 'Senior PM, AI', sub: 'Nectar Social',
-      body: `<div class="sec" style="margin-top:0">Needs you</div>
-        <div class="group">${tasks.length ? tasks.map(t => `<div class="frow" data-a="menuGo" data-r="${t.r}" ${t.open ? `data-open="${t.open}"` : ''}><span class="v" style="-webkit-line-clamp:3">${esc(t.label)}</span>${t.due ? `<span class="due">${esc(t.due)}</span>` : ''}</div>`).join('') : '<div class="frow" style="cursor:default"><span class="v muted">Nothing needs you right now.</span></div>'}</div>
-        <div class="sec">Milestones</div>
-        <div class="group">${ms}</div>`
-    };
-  };
+  A.navGo = d => { PL.S.navOpen = false; PL.go(d.r); };
+  A.openHub = d => PL.openHub(d.k || 'needs');
+  function renderNav() {
+    const S = PL.S, root = document.getElementById('nav-root');
+    if (!S.navOpen) {
+      if (root.classList.contains('on')) { root.classList.remove('show'); setTimeout(() => { if (!PL.S.navOpen) { root.classList.remove('on'); root.innerHTML = ''; } }, 300); }
+      return;
+    }
+    let h = `<div class="nav-bd" data-a="closeNav"></div><aside class="nav-panel" aria-label="Menu">
+      <div class="nav-head"><div><div class="nav-role">${esc(PL.titleText())}</div><div class="nav-co">Nectar Social</div></div><button class="icon-btn" data-a="closeNav" aria-label="Close menu">${ic('x')}</button></div><div class="nav-body"><div class="nav-list">`;
+    const todos = PL.todos ? PL.todos() : {};
+    PL.MENU.forEach(id => {
+      const r = PL.ROUTES[PL.routeIdx(id)];
+      const t = todos[id] || 0;
+      h += `<button class="nav-item ${id === S.route ? 'cur' : ''}" data-a="navGo" data-r="${id}"${id === S.route ? ' aria-current="page"' : ''}><span class="nav-l">${esc(r.label)}</span>${t ? `<span class="nbadge" aria-label="${t} to-do${t === 1 ? '' : 's'}">${t}</span>` : ''}</button>`;
+    });
+    h += '</div><button class="nav-reset" data-a="reset">Reset demo</button>';
+    h += '</div></aside>';
+    const wasShown = root.classList.contains('show');
+    root.innerHTML = h;
+    root.classList.add('on');
+    if (!wasShown) { void root.offsetHeight; requestAnimationFrame(() => root.classList.add('show')); } else root.classList.add('show');
+  }
+  /* swipe the panel away to the right */
+  let navSwipe = null;
+  document.addEventListener('pointerdown', e => { const p = e.target.closest('.nav-panel'); if (p) navSwipe = { x: e.clientX, y: e.clientY }; });
+  document.addEventListener('pointerup', e => {
+    if (!navSwipe) return;
+    const dx = e.clientX - navSwipe.x, dy = e.clientY - navSwipe.y; navSwipe = null;
+    if (dx > 80 && Math.abs(dy) < 60) { PL.S.navOpen = false; PL.render(); }
+  });
 
   PL.boot = () => { PL.fit(); PL.render(); };
 })(window.PL);

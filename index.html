@@ -11,32 +11,30 @@
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='12' cy='16' r='7' fill='%231D6B57'/%3E%3Ccircle cx='23' cy='16' r='4' fill='%23CBE4DA'/%3E%3C/svg%3E">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=1.17">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css?v=1.74">
 </head>
 <body>
   <div class="stage">
-    <aside class="panel panel-left" id="left"></aside>
     <div class="phone">
       <div class="screen">
         <div class="statusbar"><span>9:41</span><div class="island"></div><div class="sb-icons"><s></s><i></i></div></div>
         <div id="app" style="display:flex;flex-direction:column;flex:1;min-height:0"></div>
         <div class="sheet-root" id="sheet-root"></div>
+        <div class="nav-root" id="nav-root"></div>
         <div id="toast-root"></div>
         <div class="home-ind"></div>
       </div>
     </div>
-    <aside class="panel panel-right" id="right"></aside>
   </div>
-  <button class="mobile-nav-btn" data-a="drawer" aria-label="Steps"><svg class="ic" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
-  <div class="drawer" id="drawer"></div>
+  <button class="reset-demo" data-a="reset">Reset demo</button>
 
-  <script src="data.js?v=1.17"></script>
-  <script src="core.js?v=1.17"></script>
-  <script src="model.js?v=1.17"></script>
-  <script src="m1.js?v=1.17"></script>
-  <script src="m2.js?v=1.17"></script>
-  <script src="m3.js?v=1.17"></script>
+  <script src="data.js?v=1.74"></script>
+  <script src="core.js?v=1.74"></script>
+  <script src="model.js?v=1.74"></script>
+  <script src="m1.js?v=1.74"></script>
+  <script src="m2.js?v=1.74"></script>
+  <script src="m3.js?v=1.74"></script>
   <script>PL.boot();</script>
 </body>
 </html>
